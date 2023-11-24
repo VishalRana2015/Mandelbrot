@@ -50,7 +50,7 @@ public class MandelbrotFrame extends JFrame {
         mandelbrotComponentPanel.add(mandelbrotComponent);
         panel.add(mandelbrotComponent, constraints);
         mandelbrotComponentPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        JPanel menuPanel = createPanel();
+        JPanel menuPanel = createPanel(mandelbrotComponent);
         constraints.weightx = 0.3;
         constraints.gridx = 1;
         panel.add(menuPanel, constraints);
@@ -60,7 +60,7 @@ public class MandelbrotFrame extends JFrame {
         this.setVisible(true);
     }
 
-    public JPanel createPanel() {
+    public JPanel createPanel(MandelbrotComponent mandelbrotComponent) {
         JPanel panel = new JPanel();
         BoxLayout boxLayout = new BoxLayout(panel, BoxLayout.Y_AXIS);
         panel.setLayout(boxLayout);
@@ -76,14 +76,14 @@ public class MandelbrotFrame extends JFrame {
         JLabel iterationsLabel = new JLabel("Set Iterations");
         iterationPanel.add(iterationsLabel, cont);
 
-        SpinnerNumberModel iterationsSpinnerNumberModel = new SpinnerNumberModel(500, 1, 1000, 1);
+        SpinnerNumberModel iterationsSpinnerNumberModel = new SpinnerNumberModel(mandelbrotComponent.getMaxIterations(), 1, 1000, 1);
         iterationsSpinner = new JSpinner(iterationsSpinnerNumberModel);
 
         iterationsSpinner.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 JSpinner spinner = (JSpinner) e.getSource();
-                mandelbrotComponent.setMaxIterations((Integer)spinner.getValue());
+                mandelbrotComponent.setMaxIterations((Integer) spinner.getValue());
                 updateUI();
             }
         });
@@ -111,21 +111,21 @@ public class MandelbrotFrame extends JFrame {
         cont.gridwidth = 1;
         cont.anchor = GridBagConstraints.EAST;
         z0Panel.add(new JLabel("Real: "), cont);
-        SpinnerNumberModel spinnerNumberModelReal = new SpinnerNumberModel(0, -4, 4, 0.01);
+        SpinnerNumberModel spinnerNumberModelReal = new SpinnerNumberModel(mandelbrotComponent.getZ0().getReal(), -4, 4, 0.01);
         JSpinner realSpinner = new JSpinner(spinnerNumberModelReal);
-        SpinnerNumberModel spinnerNumberModelImg = new SpinnerNumberModel(0, -4, 4, 0.01);
+        SpinnerNumberModel spinnerNumberModelImg = new SpinnerNumberModel(mandelbrotComponent.getZ0().getImaginary(), -4, 4, 0.01);
         JSpinner imgSpinner = new JSpinner(spinnerNumberModelImg);
 
-        realSpinner.addChangeListener( (ChangeEvent e) -> {
-            JSpinner spinner = (JSpinner)e.getSource();
-            double real = (double)spinner.getValue();
+        realSpinner.addChangeListener((ChangeEvent e) -> {
+            JSpinner spinner = (JSpinner) e.getSource();
+            double real = (double) spinner.getValue();
             mandelbrotComponent.getZ0().setReal(real);
             updateUI();
         });
 
-        imgSpinner.addChangeListener( (ChangeEvent e) -> {
+        imgSpinner.addChangeListener((ChangeEvent e) -> {
             JSpinner spinner = (JSpinner) e.getSource();
-            double img = (double)spinner.getValue();
+            double img = (double) spinner.getValue();
             mandelbrotComponent.getZ0().setImaginary(img);
             updateUI();
         });
@@ -270,26 +270,25 @@ public class MandelbrotFrame extends JFrame {
         });
     }
 
-    private void updateUI(){
-        if ( isTriggered){
+    private void updateUI() {
+        if (isTriggered) {
             timer.cancel();
         }
         isTriggered = true;
         timer = new Timer();
-        timer.schedule( new TimerTask() {
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                try{
-                    SwingUtilities.invokeAndWait( () -> {
+                try {
+                    SwingUtilities.invokeAndWait(() -> {
                         mandelbrotComponent.setPixels2();
                         mandelbrotComponent.repaint();
                         isTriggered = false;
                     });
-                }
-                catch (Exception exp){
+                } catch (Exception exp) {
                     System.out.println("Exception caught while processing updateMandelbrotTimerTask: " + exp.getMessage());
                 }
             }
-        } , 1000);
+        }, 1000);
     }
 }
