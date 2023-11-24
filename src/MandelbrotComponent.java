@@ -1,23 +1,31 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.image.MemoryImageSource;
 
 public class MandelbrotComponent extends JComponent {
-    int width, height;
-    public static int ITERATIONS = 500;
-    double mandelbrotFrameLeftCornerX, mandelbrotFrameLeftCornerY, mandelbrotFrameCenterX, mandelbrotFrameCenterY, mandelbrotFrameWidth, mandelbrotFrameHeight;
+    int pixelWidth, pixelHeight;
+    private double scalingFactor;
+    public static int INITIAL_ITERATIONS = 500;
+    private int scalingFactorDivider = 10;
+    private int maxIterations = 0;
+    /* Mandelbrot function is f(x) = x^2 + c */
+    private ComplexNumber z0;
+
+    double mandelbrotLeftCornerX, mandelbrotLeftCornerY, mandelbrotCenterX, mandelbrotCenterY, mandelbrotWidth, mandelbrotHeight;
     /* mandelbrotFrameWidth and mandelbrotFrameHeight represents width and height of the graph in real numbers */
     int sx, sy, sw, sh;
-    Image mandlebrotimage;
+    Image mandelbrotImage;
     int[] pixels;
     boolean selectMode;
-    static BoxMover mover;
 
-    static {
-        mover = new BoxMover();
-    }
+    private static final double MANDELBROT_INITIAL_WIDTH = 4.0;
+    private static final double MANDELBROT_INITIAL_HEIGHT = 4.0;
+    private static final double MANDELBROT_INITIAL_LEFT_CORNER_X = -2.0;
+    private static final double MANDELBROT_INITIAL_LEFT_CORNER_Y = 2.0;
+    private static final double MANDELBROT_INITIAL_CENTER_X = 0.0;
+    private static final double MANDELBROT_INITIAL_CENTER_Y = 0.0;
 
     public void setSelectMode(boolean selectMode) {
         this.selectMode = selectMode;
@@ -27,43 +35,154 @@ public class MandelbrotComponent extends JComponent {
         return selectMode;
     }
 
-    public MandelbrotComponent(int width, int height) {
-        this.width = width;
-        this.height = height;
-        selectMode = false;
-        this.setSize(width, height);
-        this.setPreferredSize(new Dimension(width, height));
-        this.setMaximumSize(new Dimension(width, height));
-        this.setMinimumSize(new Dimension(width, height));
-        // Creating a mandelbrot image
-        pixels = new int[width * height];
-        // initial parameters
-        mandelbrotFrameLeftCornerX = -2;
-        mandelbrotFrameLeftCornerY = 2;
-        mandelbrotFrameWidth = 4;
-        mandelbrotFrameHeight = 4;
-        mandelbrotFrameCenterX = 0;
-        mandelbrotFrameCenterY = 0;
-        sw = width / 8;
-        sh = height / 8;
-        setPixels();
-        MemoryImageSource mis = new MemoryImageSource(width, height, pixels, 0, width);
-        mandlebrotimage = createImage(mis);
-        this.addKeyListener(mover);
+    public void setMaxIterations(int maxIterations) {
+        this.maxIterations = maxIterations;
     }
 
-    private void setPixels() {
+    public int getMaxIterations() {
+        return this.maxIterations;
+    }
+
+    public MandelbrotComponent(int pixelWidth, int pixelHeight, double mandelbrotLeftCornerX, double mandelbrotLeftCornerY, double mandelbrotWidth, double mandelbrotHeight) {
+        setSize(new Dimension(pixelWidth, pixelHeight));
+        this.mandelbrotLeftCornerX = mandelbrotLeftCornerX;
+        this.mandelbrotLeftCornerY = mandelbrotLeftCornerY;
+        this.mandelbrotCenterX = MANDELBROT_INITIAL_CENTER_X;
+        this.mandelbrotCenterY = MANDELBROT_INITIAL_CENTER_Y;
+        this.mandelbrotWidth = mandelbrotWidth;
+        this.mandelbrotHeight = mandelbrotHeight;
+        this.scalingFactor = mandelbrotWidth / scalingFactorDivider;
+        this.setListeners();
+        this.maxIterations = INITIAL_ITERATIONS;
+        this.setZ0(new ComplexNumber(0, 0));
+    }
+
+    private void createImage() {
+        MemoryImageSource mis = new MemoryImageSource(pixelWidth, pixelHeight, pixels, 0, pixelWidth);
+        this.mandelbrotImage = createImage(mis);
+    }
+
+    public void setScalingFactor(double scalingFactor) {
+        this.scalingFactor = scalingFactor;
+    }
+
+    public double getScalingFactor() {
+        return scalingFactor;
+    }
+
+    public double getMandelbrotLeftCornerX() {
+        return mandelbrotLeftCornerX;
+    }
+
+    public void setMandelbrotLeftCornerX(double mandelbrotLeftCornerX) {
+        this.mandelbrotLeftCornerX = mandelbrotLeftCornerX;
+    }
+
+    public double getMandelbrotLeftCornerY() {
+        return mandelbrotLeftCornerY;
+    }
+
+    public void setMandelbrotLeftCornerY(double mandelbrotLeftCornerY) {
+        this.mandelbrotLeftCornerY = mandelbrotLeftCornerY;
+    }
+
+    public void setMandelbrotWidth(double mandelbrotWidth) {
+        this.mandelbrotWidth = mandelbrotWidth;
+    }
+
+    public void setMandelbrotHeight(double mandelbrotHeight) {
+        this.mandelbrotHeight = mandelbrotHeight;
+    }
+
+    public double getMandelbrotHeight() {
+        return mandelbrotHeight;
+    }
+
+    public double getMandelbrotWidth() {
+        return mandelbrotWidth;
+    }
+
+    public void resetScalingFactor() {
+        this.scalingFactor = mandelbrotWidth / scalingFactorDivider;
+    }
+
+    public MandelbrotComponent(int pixelWidth, int pixelHeight) {
+        // initial parameters
+        setSize(new Dimension(pixelWidth, pixelHeight));
+        mandelbrotLeftCornerX = MANDELBROT_INITIAL_LEFT_CORNER_X;
+        mandelbrotLeftCornerY = MANDELBROT_INITIAL_LEFT_CORNER_Y;
+        mandelbrotWidth = MANDELBROT_INITIAL_WIDTH;
+        mandelbrotHeight = MANDELBROT_INITIAL_HEIGHT;
+        mandelbrotCenterX = MANDELBROT_INITIAL_CENTER_X;
+        mandelbrotCenterY = MANDELBROT_INITIAL_CENTER_Y;
+        this.scalingFactor = mandelbrotWidth / 400;
+        this.setZ0(new ComplexNumber(0, 0));
+        this.maxIterations = INITIAL_ITERATIONS;
+//        sw = pixelWidth / 8; // They are not being used while drawing the mandelbrot
+//        sh = pixelHeight / 8;
+    }
+
+    @Override
+    public void setSize(Dimension d) {
+        super.setSize(d);
+        this.pixelWidth = (int) d.getWidth();
+        this.pixelHeight = (int) d.getHeight();
+        this.setSize(pixelWidth, pixelHeight);
+        this.setPreferredSize(new Dimension(pixelWidth, pixelHeight));
+        this.setMaximumSize(new Dimension(pixelWidth, pixelHeight));
+        this.setMinimumSize(new Dimension(pixelWidth, pixelHeight));
+        // Creating a mandelbrot image
+        pixels = new int[pixelWidth * pixelHeight];
+
+    }
+
+    public void setZ0(ComplexNumber z0) {
+        this.z0 = z0;
+    }
+
+    public void setPixels2() {
+        pixels = new int[pixelWidth * pixelHeight];
+        // for each pixel in the mandelbrot image
+        int iterationColorRatio = (int) Math.ceil(((double) this.maxIterations) / colorArray.length);
+        int index = 0;
+        double lengthOfAPixelInMandelbrot = (mandelbrotWidth) / pixelWidth;
+        double heightOfAPixelInMandelbrot = (mandelbrotHeight) / pixelHeight;
+        for (int pixelY = 0; pixelY < pixelHeight; pixelY++) {
+            for (int pixelX = 0; pixelX < pixelWidth; pixelX++) {
+                // Now get what point current pixel represents in Mandelbrot image
+                double x, y;
+                x = lengthOfAPixelInMandelbrot * pixelX + mandelbrotLeftCornerX;
+                y = mandelbrotLeftCornerY - heightOfAPixelInMandelbrot * pixelY;
+                int iterationsTookToEscape = calculateMandelbrotIterations(new ComplexNumber(x, y));
+                try {
+                    Color color = Color.getHSBColor(((float) iterationsTookToEscape) / this.maxIterations, 1.0f, 1.0f);
+                    if (iterationsTookToEscape == 0) {
+                        color = Color.getHSBColor(0.25f, 1.0f, 0.2f);
+                    }
+                    pixels[index++] = color.getRGB();
+                } catch (Exception exp) {
+                    System.out.println("iterations : " + iterationsTookToEscape);
+                    System.out.println("iterationColorRatio : " + iterationColorRatio);
+                    System.out.println("colorArray.length: " + colorArray.length);
+                    throw new RuntimeException("Exception");
+                }
+            }
+        }
+        createImage();
+    }
+
+    public void setPixels() {
         double incrementXBy, incrementYBy;
-        incrementXBy = mandelbrotFrameWidth / width;
-        incrementYBy = mandelbrotFrameHeight / height;
+        incrementXBy = mandelbrotWidth / pixelWidth;
+        incrementYBy = mandelbrotHeight / pixelHeight;
         int index = 0;
         double currentPixelX, currentPixelY;
-        currentPixelY = mandelbrotFrameLeftCornerY;
+        currentPixelY = mandelbrotLeftCornerY;
         int cindex = 0;
-        for (int y = 0; y < height; y++) {
-            currentPixelX = mandelbrotFrameLeftCornerX;
-            for (int x = 0; x < width; x++) {
-                int itr = mandlebrottest(currentPixelX, currentPixelY);
+        for (int y = 0; y < pixelHeight; y++) {
+            currentPixelX = mandelbrotLeftCornerX;
+            for (int x = 0; x < pixelWidth; x++) {
+                int itr = calculateMandelbrotIterations(new ComplexNumber(currentPixelX, currentPixelY));
                 cindex = itr / 60;
                 pixels[index++] = colorArray[cindex].getRGB();
                 currentPixelX = currentPixelX + incrementXBy;
@@ -71,27 +190,50 @@ public class MandelbrotComponent extends JComponent {
             currentPixelY = currentPixelY - incrementYBy;
         }
         System.out.println("Pixels set successfully");
+        createImage();
     }
 
-    Color[] colorArray = {new Color(0, 0, 120), new Color(0, 0, 255), new Color(0, 120, 0), new Color(0, 200, 0), new Color(0, 200, 200), new Color(20, 200, 0), new Color(200, 0, 0), new Color(120, 0, 0), new Color(50, 0, 0), new Color(0, 0, 0)};
+    Color[] colorArray = {new Color(0, 0, 120),
+            new Color(0, 0, 255),
+            new Color(0, 120, 120),
+            new Color(0, 200, 20),
+            new Color(0, 255, 0),
+            new Color(20, 200, 0),
+            new Color(100, 120, 0),
+            new Color(70, 70, 0),
+            new Color(200, 0, 0),
+            new Color(120, 0, 0),
+            new Color(70, 0, 0),
+            new Color(50, 0, 0),
+            new Color(255, 255, 200)};
 
-    private int mandlebrottest(double a, double b) {
-        Complex z = new Complex(a, b);
-        Complex c = new Complex(a, b);
-        int itr = 0;
-        double re, img;
-        while (itr < ITERATIONS) {
-            re = z.getReal();
-            img = z.getImaginary();
-            if (re * re + img * img < 4) {
-                z.setReal(re * re - img * img + a);
-                z.setImaginary(2 * re * img + b);
+
+    /**
+     * This function calculates the number of iterations required for a complex number to exceed a magnitude of 2. In the Mandelbrot set, numbers that consistently remain under this threshold after a given number of iterations are considered part of the set. Any complex number reaching a magnitude greater than 2 within the specified maximum iterations is deemed to escape to infinity and is not part of the Mandelbrot set. <br/>
+     * Used to find whether the given complex number is in mandelbrot set or not
+     *
+     * @param x ComplexNumber
+     * @return Number of iterations took to verify whether the point is in mandelbrot set or not.
+     **/
+    private int calculateMandelbrotIterations(ComplexNumber x) {
+        int iterations = 0;
+        ComplexNumber z = x;
+        while (iterations < maxIterations) {
+            if (iterations == 0) {
+                // this is the first iterations, therefore just check the magnitude of c
+                if (z.getMagnitude() > 2) {
+                    break;
+                }
+                z = ComplexNumber.add(ComplexNumber.multiply(z0, z0), x);
             } else {
-                break;
+                if (z.getMagnitude() > 2) {
+                    break;
+                }
+                z = ComplexNumber.add(ComplexNumber.multiply(z, z), x);
             }
-            itr++;
+            iterations++;
         }
-        return itr;
+        return iterations;
     }
 
     @Override
@@ -107,7 +249,7 @@ public class MandelbrotComponent extends JComponent {
         gg.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         gg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        gg.drawImage(mandlebrotimage, x, y, w, h, 0, 0, mandlebrotimage.getWidth(null), mandlebrotimage.getHeight(null), null);
+        gg.drawImage(mandelbrotImage, x, y, w, h, 0, 0, mandelbrotImage.getWidth(null), mandelbrotImage.getHeight(null), null);
         if (this.isSelectMode()) {
             BasicStroke s = new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
             gg.setStroke(s);
@@ -118,238 +260,18 @@ public class MandelbrotComponent extends JComponent {
         System.out.println("Image Drawned");
     }
 
-    // creating a zooming facility
-    static class BoxMover implements KeyListener {
-        public BoxMover() {
-            System.out.println("BoxMover object Created");
-        }
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-            System.out.println("Key Pressed");
-
-            if (!(e.getSource() instanceof MandelbrotComponent))
-                return;
-            MandelbrotComponent comp = (MandelbrotComponent) e.getSource();
-            System.out.println("key char :" + e.getKeyChar());
-        }
-
-        @Override
-        public void keyReleased(KeyEvent e) {
-            System.out.println("Key Released");
-        }
-
-        @Override
-        public void keyTyped(KeyEvent e) {
-            // If the typed key are space then show the respective component
-            System.out.println("KeyTyped");
-        }
-
-
-        static class MoverThread extends Thread {
-            MandelbrotComponent comp;
-            public static int LEFT = 1;
-            public static int RIGHT = 2;
-            public static int TOP = 3;
-            public static int BOTTOM = 4;
-            boolean pressed;
-            int move;
-
-            public MoverThread(MandelbrotComponent comp) {
-                super("MoverThread");
-                this.comp = comp;
-                pressed = false;
-            }
-
-            public void setPressed(boolean pressed) {
-                this.pressed = pressed;
-            }
-
-            public boolean isPressed() {
-                return pressed;
-            }
-
-            public void setMove(int move) {
-                this.move = move;
-            }
-
-            public int getMove() {
-                return move;
-            }
-
+    private void setListeners() {
+        this.addMouseWheelListener(new MouseWheelListener() {
             @Override
-            public void run() {
-                super.run();
-                System.out.println("In the run method");
-                while (pressed) {
-                    if (this.getMove() == LEFT) {
-                        comp.sx = comp.sx - 1;
-                    } else if (this.getMove() == RIGHT)
-                        comp.sx = comp.sx + 1;
-                    else if (this.getMove() == TOP)
-                        comp.sy = comp.sy - 1;
-                    else if (this.getMove() == BOTTOM)
-                        comp.sy = comp.sy + 1;
-                    else
-                        break;
-                    try {
-                        Thread.currentThread().sleep(200);
-                    } catch (Exception e) {
-                        System.out.println("Excpetion cuaght : " + e.getMessage());
-                    }
-                }
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                System.out.println("point : " + e.getPoint());
+                System.out.println("e.getX: " + e.getX());
+                System.out.println("e.getY: " + e.getY());
+                System.out.println("e.getRotations: " + e.getWheelRotation());
+                System.out.println("e.getPreciseWheelRotation: " + e.getPreciseWheelRotation());
             }
-        }
+        });
     }
 }
- class MyKeyListener implements KeyListener{
-    @Override
-    public void keyReleased(KeyEvent e) {
-        if ( ! (e.getSource() instanceof MandelbrotComponent) )
-            return;
-        MandelbrotComponent comp  = (MandelbrotComponent)e.getSource();
 
 
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        if ( !(e.getSource() instanceof MandelbrotComponent))
-            return;
-        MandelbrotComponent comp = (MandelbrotComponent)e.getSource();
-        MoveThread thread;
-        char c = e.getKeyChar();
-        if ( Character.toUpperCase(c) == KeyEvent.VK_J){
-            System.out.println("Up key pressed");
-            if ( !comp.isSelectMode())
-                return;
-            thread = new MoveThread((MandelbrotComponent)e.getSource() , MoveThread.MOVETOLEFT);
-            thread.start();
-        }
-        else if ( Character.toUpperCase(c)  == KeyEvent.VK_K){
-            System.out.println("Down Arrow Key Pressed.");
-            if ( !(comp.isSelectMode()))
-                return;
-            thread = new MoveThread( comp, MoveThread.MOVETOBOTTOM);
-            thread.start();
-        }
-        else if ( Character.toUpperCase(c) == KeyEvent.VK_L){
-            if ( !comp.isSelectMode())
-                return;
-            thread = new MoveThread(comp, MoveThread.MOVETORIGHT);
-            thread.start();
-        }
-        else if ( Character.toUpperCase(c) == KeyEvent.VK_I) {
-            if ( !comp.isSelectMode())
-                return;
-            thread = new MoveThread(comp, MoveThread.MOVETOTOP);
-            thread.start();
-        }
-        else if ( Character.toUpperCase(c) == KeyEvent.VK_SPACE){
-            System.out.println("Space Pressed.");
-            comp.setSelectMode( !comp.isSelectMode());
-        }
-
-
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-
-    }
-}
- class MoveThread extends Thread{
-    public static final   int MOVETOLEFT = 1;
-    public static  final int MOVETORIGHT = 2;
-    public static final int MOVETOTOP = 3;
-    public static final int MOVETOBOTTOM = 4;
-    private MandelbrotComponent comp ;
-    private boolean move;
-    private int direction;
-    public MoveThread(MandelbrotComponent comp, int direction ){
-        this.comp = comp;
-        this.direction = direction;
-        move = true;
-    }
-
-    @Override
-    public void run() {
-        super.run();
-        // System.out.println("Thread called");
-        if( !(comp instanceof MandelbrotComponent))
-            return;
-        int left, right, top , bottom;
-        left = comp.getInsets().top;
-        right = comp.getInsets().right;
-        top = comp.getInsets().top;
-        bottom = comp.getInsets().bottom;
-
-        do{
-            switch( direction ){
-                case MoveThread.MOVETOLEFT :
-                    if ( comp.sx > left ){
-                        comp.sx = comp.sx-1;
-                    }
-                    else{
-                        break;
-                    }
-                case MoveThread.MOVETORIGHT :
-                    if ( comp.sx < comp.width - right -comp.sw){
-                        comp.sx = comp.sx + 1;
-                    }
-                    else{
-                        break;
-                    }
-                case MoveThread.MOVETOTOP :
-                    if ( comp.sy > top ){
-                        comp.sy = comp.sy -1;
-                    }
-                    else
-                        break;
-                case MoveThread.MOVETOBOTTOM :
-                    if ( comp.sy < comp.height - comp.sh - bottom){
-                        comp.sy = comp.sy = comp.sy +1 ;
-                    }
-                    else{
-                        break;
-                    }
-                default :
-                    System.out.println("do nothing ");
-                    break;
-            }
-        }while(this.isMove());
-        System.out.println("Taking exit from move Thread");
-    }
-
-    public void setMove(boolean move) {
-        this.move = move;
-    }
-
-    public boolean isMove() {
-        return move;
-    }
-}
-class Complex{
-    double re,img;
-    public Complex(double re, double img){
-        this.re = re;
-        this.img = img;
-    }
-
-    public double getReal() {
-        return re;
-    }
-
-    public double getImaginary() {
-        return img;
-    }
-
-    public void setReal(double re) {
-        this.re = re;
-    }
-
-    public void setImaginary(double img) {
-        this.img = img;
-    }
-
-}
