@@ -80,9 +80,6 @@ public class MandelbrotFrame extends JFrame {
         iterationsSpinner = new JSpinner(iterationsSpinnerNumberModel);
 
         iterationsSpinner.addChangeListener(new ChangeListener() {
-            boolean isTriggered = false;
-            java.util.Timer timer;
-
             @Override
             public void stateChanged(ChangeEvent e) {
                 JSpinner spinner = (JSpinner) e.getSource();
@@ -118,6 +115,21 @@ public class MandelbrotFrame extends JFrame {
         JSpinner realSpinner = new JSpinner(spinnerNumberModelReal);
         SpinnerNumberModel spinnerNumberModelImg = new SpinnerNumberModel(0, -4, 4, 0.01);
         JSpinner imgSpinner = new JSpinner(spinnerNumberModelImg);
+
+        realSpinner.addChangeListener( (ChangeEvent e) -> {
+            JSpinner spinner = (JSpinner)e.getSource();
+            double real = (double)spinner.getValue();
+            mandelbrotComponent.getZ0().setReal(real);
+            updateUI();
+        });
+
+        imgSpinner.addChangeListener( (ChangeEvent e) -> {
+            JSpinner spinner = (JSpinner) e.getSource();
+            double img = (double)spinner.getValue();
+            mandelbrotComponent.getZ0().setImaginary(img);
+            updateUI();
+        });
+
         cont.gridx = 1;
         cont.anchor = GridBagConstraints.WEST;
         z0Panel.add(realSpinner, cont);

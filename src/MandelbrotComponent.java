@@ -140,6 +140,10 @@ public class MandelbrotComponent extends JComponent {
         this.z0 = z0;
     }
 
+    public ComplexNumber getZ0() {
+        return z0;
+    }
+
     public void setPixels2() {
         pixels = new int[pixelWidth * pixelHeight];
         // for each pixel in the mandelbrot image
