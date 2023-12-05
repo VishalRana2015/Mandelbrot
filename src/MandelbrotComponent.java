@@ -5,6 +5,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.awt.image.MemoryImageSource;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ public class MandelbrotComponent extends JComponent {
     int[] pixelsWithoutLines;
     boolean selectMode;
     private static Point point;
-    private HashMap<Point, ArrayList<Point>> pointArrayListHashMap;
+    private HashMap<Point, ArrayList<ComplexNumber>> pointArrayListHashMap;
 
     private static final double MANDELBROT_INITIAL_WIDTH = 4.0;
     private static final double MANDELBROT_INITIAL_HEIGHT = 4.0;
@@ -191,13 +192,7 @@ public class MandelbrotComponent extends JComponent {
                 x = lengthOfAPixelInMandelbrot * pixelX + mandelbrotLeftCornerX;
                 y = mandelbrotLeftCornerY - heightOfAPixelInMandelbrot * pixelY;
                 ArrayList<ComplexNumber> list = calculateMandelbrotIterations(new ComplexNumber(x, y));
-                // convert this list into arrayList of points.
-                ArrayList<Point> pointList = new ArrayList<>();
-                for (int i = 0; i < list.size() && i < FIRST_MANDELBROT_ITERATIONS_TO_STORE; i++) {
-                    ComplexNumber c = list.get(i);
-                    pointList.add(new Point((int) (Math.abs(c.getReal() - mandelbrotLeftCornerX) / lengthOfAPixelInMandelbrot), (int) (Math.abs(c.getImaginary() - mandelbrotLeftCornerY) / heightOfAPixelInMandelbrot)));
-                }
-                pointArrayListHashMap.put(new Point(pixelX, pixelY), pointList);
+                pointArrayListHashMap.put(new Point(pixelX, pixelY), list);
                 ComplexNumber zn = list.get(list.size() - 1);
 
                 int iterationsTookToEscape = list.size();
@@ -240,10 +235,39 @@ public class MandelbrotComponent extends JComponent {
         }
     }
 
-    public void drawLines(Graphics g) {
-        resetPixelsToWithoutLines();
+    public void drawLines(BufferedImage image) {
+        if (point == null) {
+            System.out.println("point is null");
+            return;
+        }
+        ArrayList<Point> pointList = getPoints(pointArrayListHashMap.get(point));
+        if (pointList == null || pointList.size() < 2) {
+            System.out.println("pointList is null or its size is lesser than 2");
+        }
+        Graphics2D graphics2D = (Graphics2D) image.getGraphics();
+        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        CohenSutherlandClippingAlgorithm cohenSutherlandClippingAlgorithm = new CohenSutherlandClippingAlgorithm(0, 0, image.getWidth(null), image.getHeight(null));
+        for (int i = 1; i < pointList.size(); i++) {
+            Point p1 = pointList.get(i - 1), p2 = pointList.get(i);
+            ArrayList<Point2D> points = cohenSutherlandClippingAlgorithm.cohenSutherlandClip(new Point2D.Double(p1.getX(), p1.getY()), new Point2D.Double(p2.getX(), p2.getY()));
+            if (points == null) {
+                continue;
+            }
+            graphics2D.drawLine((int) points.get(0).getX(), (int) points.get(0).getY(),
+                    (int) points.get(1).getX(), (int) points.get(1).getY());
+        }
     }
 
+    public ArrayList<Point> getPoints(ArrayList<ComplexNumber> list){
+        double lengthOfAPixelInMandelbrot = (mandelbrotWidth) / pixelWidth;
+        double heightOfAPixelInMandelbrot = (mandelbrotHeight) / pixelHeight;
+        ArrayList<Point> pointList = new ArrayList<>();
+        for (int i = 0; i < list.size() && i < FIRST_MANDELBROT_ITERATIONS_TO_STORE; i++) {
+            ComplexNumber c = list.get(i);
+            pointList.add(new Point((int) (Math.abs(c.getReal() - mandelbrotLeftCornerX) / lengthOfAPixelInMandelbrot), (int) (Math.abs(c.getImaginary() - mandelbrotLeftCornerY) / heightOfAPixelInMandelbrot)));
+        }
+        return pointList;
+    }
     public void setPixels() {
         double incrementXBy, incrementYBy;
         incrementXBy = mandelbrotWidth / pixelWidth;
@@ -315,18 +339,21 @@ public class MandelbrotComponent extends JComponent {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        System.out.println("In paint method");
         int x, y, w, h;
         w = this.getWidth() - (this.getInsets().left + this.getInsets().right);
         h = this.getHeight() - (this.getInsets().top + this.getInsets().bottom);
         x = (int) g.getClipBounds().getX();
         y = (int) g.getClipBounds().getY();
-        System.out.println(x + ", " + y + ", " + w + ", " + h);
         Graphics2D gg = (Graphics2D) g.create();
         gg.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         gg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        gg.drawImage(mandelbrotImage, x, y, w, h, 0, 0, mandelbrotImage.getWidth(null), mandelbrotImage.getHeight(null), null);
+        BufferedImage bufferedImage;
+        bufferedImage = new BufferedImage(mandelbrotImage.getWidth(null), mandelbrotImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics2D = (Graphics2D) bufferedImage.getGraphics();
+        graphics2D.drawImage(mandelbrotImage, 0, 0, null);
+        drawLines(bufferedImage);
+        graphics2D.dispose();
+        gg.drawImage(bufferedImage, x, y, w, h, 0, 0, bufferedImage.getWidth(null), bufferedImage.getHeight(null), null);
         if (this.isSelectMode()) {
             BasicStroke s = new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
             gg.setStroke(s);
@@ -334,27 +361,16 @@ public class MandelbrotComponent extends JComponent {
             gg.drawRect(sx, sy, sw, sh);
         }
 
-        if (this.point != null) {
-            // draw mandelbrot iterations lines on the component
-            ArrayList<Point> pointList = pointArrayListHashMap.get(point);
-            Graphics2D g2d = (Graphics2D)g;
-            g2d.setColor(LINE_COLOR);
-            g2d.setStroke(new BasicStroke(LINE_THICKNESS)); // line thickness
-        }
         gg.dispose();
-        System.out.println("Image Drawned");
     }
 
     private void setListeners() {
-        this.addMouseWheelListener(new MouseWheelListener() {
-            @Override
-            public void mouseWheelMoved(MouseWheelEvent e) {
-                System.out.println("point : " + e.getPoint());
-                System.out.println("e.getX: " + e.getX());
-                System.out.println("e.getY: " + e.getY());
-                System.out.println("e.getRotations: " + e.getWheelRotation());
-                System.out.println("e.getPreciseWheelRotation: " + e.getPreciseWheelRotation());
-            }
+        this.addMouseWheelListener((MouseWheelEvent e) -> {
+            System.out.println("point : " + e.getPoint());
+            System.out.println("e.getX: " + e.getX());
+            System.out.println("e.getY: " + e.getY());
+            System.out.println("e.getRotations: " + e.getWheelRotation());
+            System.out.println("e.getPreciseWheelRotation: " + e.getPreciseWheelRotation());
         });
     }
 }
