@@ -1,3 +1,5 @@
+import com.sun.org.apache.bcel.internal.generic.ACONST_NULL;
+
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -16,6 +18,8 @@ public class MandelbrotFrame extends JFrame {
     public static int MENU_MAXIMUM_WIDTH = 500;
     public static int VERTICAL_STRUCT_HEIGHT = 5;
     private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton;
+    private static JLabel xValueLabel, yValueLabel;
+    private static JPanel pointPanel;
     private JSpinner iterationsSpinner;
 
     boolean isTriggered;
@@ -221,9 +225,38 @@ public class MandelbrotFrame extends JFrame {
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
         JSeparator separator4 = new JSeparator();
         panel.add(separator4);
-        panel.add(Box.createVerticalStrut(300));
+        panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         //----------------------------------------------------------------------------------------------------------------------
+        pointPanel = new JPanel();
+        pointPanel.setLayout(new GridBagLayout());
+        cont.gridx = 0;
+        cont.gridy = 0;
+        cont.gridwidth = 1;
+        cont.gridheight = 1;
+        cont.weightx = 0.25;
+        cont.anchor = GridBagConstraints.EAST;
+        pointPanel.add(new JLabel("<html>x:&nbsp</html>"), cont);
+        xValueLabel = new JLabel("xValue");
+        cont.gridx = 1;
+        cont.anchor = GridBagConstraints.WEST;
+        pointPanel.add(xValueLabel, cont);
+        cont.gridx = 2;
+        cont.anchor = GridBagConstraints.EAST;
+        pointPanel.add(new JLabel("<html>y:&nbsp</html>"), cont);
+        yValueLabel = new JLabel("yValue");
+        cont.gridx = 3;
+        cont.anchor = GridBagConstraints.WEST;
+        pointPanel.add(yValueLabel, cont);
+        panel.add(pointPanel);
+        panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
+        panel.add(new JSeparator(JSeparator.HORIZONTAL));
+        panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
+        pointPanel.setVisible(false);
+
+        //---------------------------------------------------------------------------------------------------
+        pointPanel.add(Box.createVerticalGlue());
+
         return panel;
     }
 
@@ -277,10 +310,19 @@ public class MandelbrotFrame extends JFrame {
 
             @Override
             public void mouseMoved(MouseEvent e) {
+                Point p = e.getPoint();
+                Dimension dimension = mandelbrotComponent.getSize();
+                Double x = (mandelbrotComponent.getMandelbrotWidth() * p.getX()) / dimension.getWidth() + mandelbrotComponent.getMandelbrotLeftCornerX();
+                Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - (mandelbrotComponent.getMandelbrotHeight() * p.getY()) / dimension.getHeight();
+                xValueLabel.setText(String.format("%.6f", x));
+                yValueLabel.setText(String.format("%.6f", y));
+                pointPanel.setVisible(true);
                 mandelbrotComponent.setPoint(e.getPoint());
                 try {
                     SwingUtilities.invokeLater(() -> {
                         mandelbrotComponent.repaint();
+                        pointPanel.revalidate();
+                        pointPanel.repaint();
                     });
                 } catch (Exception exception) {
                     System.out.println("Exception caught: " + exception.getMessage());
@@ -312,9 +354,12 @@ public class MandelbrotFrame extends JFrame {
             @Override
             public void mouseExited(MouseEvent e) {
                 mandelbrotComponent.setPoint(null);
+                pointPanel.setVisible(false);
                 try {
                     SwingUtilities.invokeLater(() -> {
                         mandelbrotComponent.repaint();
+                        pointPanel.revalidate();
+                        pointPanel.repaint();
                     });
                 } catch (Exception exp) {
                     System.out.println("Exception caught: " + exp.getMessage());

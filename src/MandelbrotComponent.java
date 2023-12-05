@@ -80,6 +80,14 @@ public class MandelbrotComponent extends JComponent {
         this.scalingFactor = scalingFactor;
     }
 
+    public static double getMandelbrotInitialLeftCornerX() {
+        return MANDELBROT_INITIAL_LEFT_CORNER_X;
+    }
+
+    public static double getMandelbrotInitialLeftCornerY() {
+        return MANDELBROT_INITIAL_LEFT_CORNER_Y;
+    }
+
     public double getScalingFactor() {
         return scalingFactor;
     }
@@ -227,8 +235,8 @@ public class MandelbrotComponent extends JComponent {
         double y = mandelbrotLeftCornerY - heightOfAPixelInMandelbrot * point.getY();
         ArrayList<ComplexNumber> complexNumberList = calculateMandelbrotIterations(new ComplexNumber(x, y), FIRST_MANDELBROT_ITERATIONS_TO_STORE);
         ArrayList<Point> pointList = getPoints(complexNumberList);
-        if (pointList == null || pointList.size() < 2) {
-            System.out.println("pointList is null or its size is lesser than 2");
+        if (pointList == null) {
+            return;
         }
         graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphics2D.setStroke(new BasicStroke(LINE_THICKNESS));
