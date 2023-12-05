@@ -12,7 +12,7 @@ import java.util.TimerTask;
 public class MandelbrotFrame extends JFrame {
     MandelbrotComponent mandelbrotComponent;
 
-    public static long MAX_DELAY = 100;
+    public static long MAX_DELAY = 17;
     public static int MENU_MAXIMUM_WIDTH = 500;
     public static int VERTICAL_STRUCT_HEIGHT = 5;
     private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton;
@@ -32,7 +32,7 @@ public class MandelbrotFrame extends JFrame {
         this.isTriggered = false;
         mandelbrotComponent = new MandelbrotComponent(800, 800, -2, 2, 4, 4);
         mandelbrotComponent.setSelectMode(true);
-        // Points near the main cardioid line
+//        Points near the main cardioid line
 //        mandelbrotComponent.setZ0(new ComplexNumber(-0.75, 0));
 //        mandelbrotComponent.setZ0(new ComplexNumber(-1, 0));
 //        mandelbrotComponent.setZ0(new ComplexNumber(-1.25,0.1));
@@ -91,8 +91,6 @@ public class MandelbrotFrame extends JFrame {
         });
         cont.gridy = 2;
         iterationPanel.add(iterationsSpinner, cont);
-        System.out.println(iterationPanel.getPreferredSize().getHeight());
-        System.out.println(iterationPanel.getMaximumSize().getHeight());
         iterationPanel.setMaximumSize(iterationPanel.getPreferredSize());
         panel.add(iterationPanel);
 
@@ -271,58 +269,58 @@ public class MandelbrotFrame extends JFrame {
             updateUI();
         });
 
-       mandelbrotComponent.addMouseMotionListener(new MouseMotionListener() {
-           @Override
-           public void mouseDragged(MouseEvent e) {
+        mandelbrotComponent.addMouseMotionListener(new MouseMotionListener() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
 
-           }
+            }
 
-           @Override
-           public void mouseMoved(MouseEvent e) {
-               mandelbrotComponent.setPoint(e.getPoint());
-               try{
-                   SwingUtilities.invokeLater(()-> {
-                        mandelbrotComponent.repaint();
-                   });
-               }catch (Exception exception){
-                   System.out.println("Exception caught: " + exception.getMessage());
-               }
-           }
-       });
-
-       mandelbrotComponent.addMouseListener(new MouseListener() {
-           @Override
-           public void mouseClicked(MouseEvent e) {
-
-           }
-
-           @Override
-           public void mousePressed(MouseEvent e) {
-
-           }
-
-           @Override
-           public void mouseReleased(MouseEvent e) {
-
-           }
-
-           @Override
-           public void mouseEntered(MouseEvent e) {
-
-           }
-
-           @Override
-           public void mouseExited(MouseEvent e) {
-                mandelbrotComponent.setPoint(null);
-                try{
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                mandelbrotComponent.setPoint(e.getPoint());
+                try {
                     SwingUtilities.invokeLater(() -> {
                         mandelbrotComponent.repaint();
                     });
-                }catch (Exception exp){
-                    System.out.println("Exception caught: "+exp.getMessage());
+                } catch (Exception exception) {
+                    System.out.println("Exception caught: " + exception.getMessage());
                 }
-           }
-       });
+            }
+        });
+
+        mandelbrotComponent.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                mandelbrotComponent.setPoint(null);
+                try {
+                    SwingUtilities.invokeLater(() -> {
+                        mandelbrotComponent.repaint();
+                    });
+                } catch (Exception exp) {
+                    System.out.println("Exception caught: " + exp.getMessage());
+                }
+            }
+        });
     }
 
     private void updateUI() {
@@ -334,7 +332,6 @@ public class MandelbrotFrame extends JFrame {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                System.out.println("run method invoked");
                 try {
                     SwingUtilities.invokeAndWait(() -> {
                         mandelbrotComponent.setPixels2();
