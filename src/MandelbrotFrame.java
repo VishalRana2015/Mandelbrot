@@ -3,13 +3,16 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MandelbrotFrame extends JFrame {
     MandelbrotComponent mandelbrotComponent;
 
-    public static long MAX_DELAY = 1000;
+    public static long MAX_DELAY = 10;
     public static int MENU_MAXIMUM_WIDTH = 500;
     public static int VERTICAL_STRUCT_HEIGHT = 5;
     private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton;
@@ -268,6 +271,18 @@ public class MandelbrotFrame extends JFrame {
             mandelbrotComponent.setMandelbrotLeftCornerX(mandelbrotComponent.getMandelbrotLeftCornerX() + mandelbrotComponent.getScalingFactor());
             updateUI();
         });
+
+       mandelbrotComponent.addMouseMotionListener(new MouseMotionListener() {
+           @Override
+           public void mouseDragged(MouseEvent e) {
+
+           }
+
+           @Override
+           public void mouseMoved(MouseEvent e) {
+               System.out.println("Mouse being moved to : "+ e.getPoint());
+           }
+       });
     }
 
     private void updateUI() {
@@ -279,9 +294,11 @@ public class MandelbrotFrame extends JFrame {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
+                System.out.println("run method invoked");
                 try {
                     SwingUtilities.invokeAndWait(() -> {
                         mandelbrotComponent.setPixels2();
+                        System.out.println("pixels2 returned");
                         mandelbrotComponent.repaint();
                         isTriggered = false;
                     });
@@ -289,6 +306,6 @@ public class MandelbrotFrame extends JFrame {
                     System.out.println("Exception caught while processing updateMandelbrotTimerTask: " + exp.getMessage());
                 }
             }
-        }, 1000);
+        }, MAX_DELAY);
     }
 }

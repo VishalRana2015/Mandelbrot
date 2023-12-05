@@ -2,7 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.MemoryImageSource;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MandelbrotComponent extends JComponent {
     int pixelWidth, pixelHeight;
@@ -18,7 +23,10 @@ public class MandelbrotComponent extends JComponent {
     int sx, sy, sw, sh;
     Image mandelbrotImage;
     int[] pixels;
+    int[] pixelsWithoutLines;
     boolean selectMode;
+    private static Point point;
+    private HashMap<Point, ArrayList<Point>> pointArrayListHashMap;
 
     private static final double MANDELBROT_INITIAL_WIDTH = 4.0;
     private static final double MANDELBROT_INITIAL_HEIGHT = 4.0;
@@ -26,6 +34,10 @@ public class MandelbrotComponent extends JComponent {
     private static final double MANDELBROT_INITIAL_LEFT_CORNER_Y = 2.0;
     private static final double MANDELBROT_INITIAL_CENTER_X = 0.0;
     private static final double MANDELBROT_INITIAL_CENTER_Y = 0.0;
+    private static final int FIRST_MANDELBROT_ITERATIONS_TO_STORE = 100;
+
+    private static final Color LINE_COLOR = Color.white;
+    private static final int LINE_THICKNESS = 2;
 
     public void setSelectMode(boolean selectMode) {
         this.selectMode = selectMode;
@@ -43,8 +55,17 @@ public class MandelbrotComponent extends JComponent {
         return this.maxIterations;
     }
 
+    public void setPoint(Point point) {
+        this.point = point;
+    }
+
+    public Point getPoint() {
+        return this.point;
+    }
+
     public MandelbrotComponent(int pixelWidth, int pixelHeight, double mandelbrotLeftCornerX, double mandelbrotLeftCornerY, double mandelbrotWidth, double mandelbrotHeight) {
         setSize(new Dimension(pixelWidth, pixelHeight));
+        pointArrayListHashMap = new HashMap<>();
         this.mandelbrotLeftCornerX = mandelbrotLeftCornerX;
         this.mandelbrotLeftCornerY = mandelbrotLeftCornerY;
         this.mandelbrotCenterX = MANDELBROT_INITIAL_CENTER_X;
@@ -122,6 +143,16 @@ public class MandelbrotComponent extends JComponent {
 //        sh = pixelHeight / 8;
     }
 
+    private Color[] colors = new Color[]{
+            new Color(254, 0, 0),
+            new Color(255, 121, 1),
+            new Color(255, 255, 11),
+            new Color(34, 219, 19),
+            new Color(36, 48, 255),
+            new Color(102, 0, 146),
+            new Color(200, 0, 249)
+    };
+
     @Override
     public void setSize(Dimension d) {
         super.setSize(d);
@@ -146,6 +177,7 @@ public class MandelbrotComponent extends JComponent {
 
     public void setPixels2() {
         pixels = new int[pixelWidth * pixelHeight];
+        pixelsWithoutLines = new int[pixelWidth * pixelHeight];
         // for each pixel in the mandelbrot image
         int iterationColorRatio = (int) Math.ceil(((double) this.maxIterations) / colorArray.length);
         int index = 0;
@@ -154,25 +186,62 @@ public class MandelbrotComponent extends JComponent {
         for (int pixelY = 0; pixelY < pixelHeight; pixelY++) {
             for (int pixelX = 0; pixelX < pixelWidth; pixelX++) {
                 // Now get what point current pixel represents in Mandelbrot image
+                //System.out.println("Pixel : "+ pixelX + ", " + pixelY);
                 double x, y;
                 x = lengthOfAPixelInMandelbrot * pixelX + mandelbrotLeftCornerX;
                 y = mandelbrotLeftCornerY - heightOfAPixelInMandelbrot * pixelY;
-                int iterationsTookToEscape = calculateMandelbrotIterations(new ComplexNumber(x, y));
+                ArrayList<ComplexNumber> list = calculateMandelbrotIterations(new ComplexNumber(x, y));
+                // convert this list into arrayList of points.
+                ArrayList<Point> pointList = new ArrayList<>();
+                for (int i = 0; i < list.size() && i < FIRST_MANDELBROT_ITERATIONS_TO_STORE; i++) {
+                    ComplexNumber c = list.get(i);
+                    pointList.add(new Point((int) (Math.abs(c.getReal() - mandelbrotLeftCornerX) / lengthOfAPixelInMandelbrot), (int) (Math.abs(c.getImaginary() - mandelbrotLeftCornerY) / heightOfAPixelInMandelbrot)));
+                }
+                pointArrayListHashMap.put(new Point(pixelX, pixelY), pointList);
+                ComplexNumber zn = list.get(list.size() - 1);
+
+                int iterationsTookToEscape = list.size();
                 try {
                     Color color = Color.getHSBColor(((float) iterationsTookToEscape) / this.maxIterations, 1.0f, 1.0f);
-                    if (iterationsTookToEscape == 0) {
-                        color = Color.getHSBColor(0.25f, 1.0f, 0.2f);
+                    if (iterationsTookToEscape == 500) {
+                        color = Color.BLACK;
+                    } else {
+                        // nsmooth := n + 1 - Math.log(Math.log(zn.abs()))/Math.log(2)
+                        float nsmooth = iterationsTookToEscape + 1 - (float) (Math.log(Math.log(Math.sqrt(zn.getReal() * zn.getReal() + zn.getImaginary() * zn.getImaginary()))) / Math.log(2));
+                        // Color.HSBtoRGB(0.95f + 10 * smoothcolor ,0.6f,1.0f);
+                        color = Color.getHSBColor(0.95f + 10 * nsmooth, 0.6f, 1.0f);
+                        //color = colors[iterationsTookToEscape%colors.length];
+                        float[] dist = {0.0f, 0.2f, 1.0f};
+                        Point2D start = new Point2D.Float(0, 0);
+                        Point2D end = new Point2D.Float(50, 50);
+                        Color[] colors2 = {Color.RED, Color.WHITE, Color.BLUE};
+                        LinearGradientPaint p = new LinearGradientPaint(start, end, dist, colors2);
+
+                        //color = new Color(iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations);
+                        color = Color.getHSBColor((float) iterationsTookToEscape / maxIterations, 1.0f, 1.0f);
                     }
-                    pixels[index++] = color.getRGB();
+                    pixels[index] = pixelsWithoutLines[index] = color.getRGB();
+                    index++;
                 } catch (Exception exp) {
                     System.out.println("iterations : " + iterationsTookToEscape);
                     System.out.println("iterationColorRatio : " + iterationColorRatio);
                     System.out.println("colorArray.length: " + colorArray.length);
-                    throw new RuntimeException("Exception");
+                    exp.printStackTrace();
+                    throw new RuntimeException("Exception: " + exp.getMessage());
                 }
             }
         }
         createImage();
+    }
+
+    public void resetPixelsToWithoutLines() {
+        for (int i = 0; i < pixelsWithoutLines.length; i++) {
+            pixels[i] = pixelsWithoutLines[i];
+        }
+    }
+
+    public void drawLines(Graphics g) {
+        resetPixelsToWithoutLines();
     }
 
     public void setPixels() {
@@ -186,8 +255,8 @@ public class MandelbrotComponent extends JComponent {
         for (int y = 0; y < pixelHeight; y++) {
             currentPixelX = mandelbrotLeftCornerX;
             for (int x = 0; x < pixelWidth; x++) {
-                int itr = calculateMandelbrotIterations(new ComplexNumber(currentPixelX, currentPixelY));
-                cindex = itr / 60;
+                ArrayList<ComplexNumber> list = calculateMandelbrotIterations(new ComplexNumber(currentPixelX, currentPixelY));
+                cindex = list.size() / 60;
                 pixels[index++] = colorArray[cindex].getRGB();
                 currentPixelX = currentPixelX + incrementXBy;
             }
@@ -219,25 +288,28 @@ public class MandelbrotComponent extends JComponent {
      * @param x ComplexNumber
      * @return Number of iterations took to verify whether the point is in mandelbrot set or not.
      **/
-    private int calculateMandelbrotIterations(ComplexNumber x) {
+    private ArrayList<ComplexNumber> calculateMandelbrotIterations(ComplexNumber x) {
         int iterations = 0;
         ComplexNumber z = x;
+        ArrayList<ComplexNumber> list = new ArrayList<>();
+        list.add(x);
         while (iterations < maxIterations) {
             if (iterations == 0) {
                 // this is the first iterations, therefore just check the magnitude of c
                 if (z.getMagnitude() > 2) {
                     break;
                 }
-                z = ComplexNumber.add(ComplexNumber.multiply(z0, z0), x);
+                z = ComplexNumber.add(ComplexNumber.multiply(ComplexNumber.multiply(z0, z0), z0), x);
             } else {
                 if (z.getMagnitude() > 2) {
                     break;
                 }
                 z = ComplexNumber.add(ComplexNumber.multiply(z, z), x);
             }
+            list.add(z);
             iterations++;
         }
-        return iterations;
+        return list;
     }
 
     @Override
@@ -249,6 +321,7 @@ public class MandelbrotComponent extends JComponent {
         h = this.getHeight() - (this.getInsets().top + this.getInsets().bottom);
         x = (int) g.getClipBounds().getX();
         y = (int) g.getClipBounds().getY();
+        System.out.println(x + ", " + y + ", " + w + ", " + h);
         Graphics2D gg = (Graphics2D) g.create();
         gg.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         gg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -259,6 +332,14 @@ public class MandelbrotComponent extends JComponent {
             gg.setStroke(s);
             gg.setColor(new Color(255, 255, 255));
             gg.drawRect(sx, sy, sw, sh);
+        }
+
+        if (this.point != null) {
+            // draw mandelbrot iterations lines on the component
+            ArrayList<Point> pointList = pointArrayListHashMap.get(point);
+            Graphics2D g2d = (Graphics2D)g;
+            g2d.setColor(LINE_COLOR);
+            g2d.setStroke(new BasicStroke(LINE_THICKNESS)); // line thickness
         }
         gg.dispose();
         System.out.println("Image Drawned");
