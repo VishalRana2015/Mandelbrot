@@ -21,7 +21,7 @@ public class MandelbrotComponent extends JComponent {
     Image mandelbrotImage;
     int[] pixels;
     boolean selectMode;
-    private static Point point;
+    private Point point;
     private static final double MANDELBROT_INITIAL_WIDTH = 4.0;
     private static final double MANDELBROT_INITIAL_HEIGHT = 4.0;
     private static final double MANDELBROT_INITIAL_LEFT_CORNER_X = -2.0;
@@ -231,8 +231,9 @@ public class MandelbrotComponent extends JComponent {
         // from the point calculate real co-ordinates
         double lengthOfAPixelInMandelbrot = (mandelbrotWidth) / pixelWidth;
         double heightOfAPixelInMandelbrot = (mandelbrotHeight) / pixelHeight;
-        double x = lengthOfAPixelInMandelbrot * point.getX() + mandelbrotLeftCornerX;
-        double y = mandelbrotLeftCornerY - heightOfAPixelInMandelbrot * point.getY();
+        Dimension dimension = this.getSize();
+        double x = (this.getMandelbrotWidth() * point.getX()) / dimension.getWidth() + this.getMandelbrotLeftCornerX();
+        double y = this.getMandelbrotLeftCornerY() - (this.getMandelbrotHeight() * point.getY()) / dimension.getHeight();
         ArrayList<ComplexNumber> complexNumberList = calculateMandelbrotIterations(new ComplexNumber(x, y), FIRST_MANDELBROT_ITERATIONS_TO_STORE);
         ArrayList<Point> pointList = getPoints(complexNumberList);
         if (pointList == null) {
