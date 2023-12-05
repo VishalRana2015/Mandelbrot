@@ -3,6 +3,7 @@ import com.sun.org.apache.bcel.internal.generic.ACONST_NULL;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.plaf.FontUIResource;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
@@ -16,6 +17,7 @@ public class MandelbrotFrame extends JFrame {
 
     public static long MAX_DELAY = 17;
     public static int MENU_MAXIMUM_WIDTH = 500;
+    public static int MENU_MINIMUM_WIDTH = 300;
     public static int VERTICAL_STRUCT_HEIGHT = 5;
     private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton;
     private static JLabel xValueLabel, yValueLabel;
@@ -27,8 +29,10 @@ public class MandelbrotFrame extends JFrame {
 
     public MandelbrotFrame(String frameName) {
         super(frameName);
-        this.setSize(800, 700);
-        this.setLocation(50, 0);
+        setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 22)));
+        this.setSize(new Dimension(1200,800));
+        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -57,6 +61,7 @@ public class MandelbrotFrame extends JFrame {
         panel.add(mandelbrotComponent, constraints);
         mandelbrotComponentPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         JPanel menuPanel = createPanel(mandelbrotComponent);
+        menuPanel.setMinimumSize(new Dimension(MENU_MINIMUM_WIDTH, 500));
         constraints.weightx = 0.3;
         constraints.gridx = 1;
         panel.add(menuPanel, constraints);
@@ -146,8 +151,8 @@ public class MandelbrotFrame extends JFrame {
 
         z0Panel.add(imgSpinner, cont);
         //Todo
-        z0Panel.setMinimumSize(new Dimension(300, (int) z0Panel.getPreferredSize().getHeight()));
-        z0Panel.setMaximumSize(new Dimension(300, (int) z0Panel.getPreferredSize().getHeight()));
+        z0Panel.setMinimumSize(new Dimension(MENU_MINIMUM_WIDTH, (int) z0Panel.getPreferredSize().getHeight()));
+        z0Panel.setMaximumSize(new Dimension(MENU_MINIMUM_WIDTH, (int) z0Panel.getPreferredSize().getHeight()));
         z0Panel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         panel.add(z0Panel);
 
@@ -388,5 +393,53 @@ public class MandelbrotFrame extends JFrame {
                 }
             }
         }, MAX_DELAY);
+    }
+
+    private void setFont(FontUIResource myFont) {
+        UIManager.put("CheckBoxMenuItem.acceleratorFont", myFont);
+        UIManager.put("Button.font", myFont);
+        UIManager.put("ToggleButton.font", myFont);
+        UIManager.put("RadioButton.font", myFont);
+        UIManager.put("CheckBox.font", myFont);
+        UIManager.put("ColorChooser.font", myFont);
+        UIManager.put("ComboBox.font", myFont);
+        UIManager.put("Label.font", myFont);
+        UIManager.put("List.font", myFont);
+        UIManager.put("MenuBar.font", myFont);
+        UIManager.put("Menu.acceleratorFont", myFont);
+        UIManager.put("RadioButtonMenuItem.acceleratorFont", myFont);
+        UIManager.put("MenuItem.acceleratorFont", myFont);
+        UIManager.put("MenuItem.font", myFont);
+        UIManager.put("RadioButtonMenuItem.font", myFont);
+        UIManager.put("CheckBoxMenuItem.font", myFont);
+        UIManager.put("OptionPane.buttonFont", myFont);
+        UIManager.put("OptionPane.messageFont", myFont);
+        UIManager.put("Menu.font", myFont);
+        UIManager.put("PopupMenu.font", myFont);
+        UIManager.put("OptionPane.font", myFont);
+        UIManager.put("Panel.font", myFont);
+        UIManager.put("ProgressBar.font", myFont);
+        UIManager.put("ScrollPane.font", myFont);
+        UIManager.put("Viewport.font", myFont);
+        UIManager.put("TabbedPane.font", myFont);
+        UIManager.put("Slider.font", myFont);
+        UIManager.put("Table.font", myFont);
+        UIManager.put("TableHeader.font", myFont);
+        UIManager.put("TextField.font", myFont);
+        UIManager.put("Spinner.font", myFont);
+        UIManager.put("PasswordField.font", myFont);
+        UIManager.put("TextArea.font", myFont);
+        UIManager.put("TextPane.font", myFont);
+        UIManager.put("EditorPane.font", myFont);
+        UIManager.put("TabbedPane.smallFont", myFont);
+        UIManager.put("TitledBorder.font", myFont);
+        UIManager.put("ToolBar.font", myFont);
+        UIManager.put("ToolTip.font", myFont);
+        UIManager.put("Tree.font", myFont);
+        UIManager.put("FormattedTextField.font", myFont);
+        UIManager.put("IconButton.font", myFont);
+        UIManager.put("InternalFrame.optionDialogTitleFont", myFont);
+        UIManager.put("InternalFrame.paletteTitleFont", myFont);
+        UIManager.put("InternalFrame.titleFont", myFont);
     }
 }
