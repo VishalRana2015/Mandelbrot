@@ -1,5 +1,3 @@
-import com.sun.org.apache.bcel.internal.generic.ACONST_NULL;
-
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -30,7 +28,7 @@ public class MandelbrotFrame extends JFrame {
     public MandelbrotFrame(String frameName) {
         super(frameName);
         setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 22)));
-        this.setSize(new Dimension(1200,800));
+        this.setSize(new Dimension(1200, 800));
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -310,7 +308,16 @@ public class MandelbrotFrame extends JFrame {
         mandelbrotComponent.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
-
+                Point p = e.getPoint();
+                mandelbrotComponent.setSelectionSquareEndingPoint(p);
+                try {
+                    SwingUtilities.invokeLater(() -> {
+                        mandelbrotComponent.revalidate();
+                        mandelbrotComponent.repaint();
+                    });
+                } catch (Exception exp) {
+                    System.out.println("Exception caught: " + exp.getMessage());
+                }
             }
 
             @Override
@@ -322,7 +329,7 @@ public class MandelbrotFrame extends JFrame {
                 xValueLabel.setText(String.format("%.6f", x));
                 yValueLabel.setText(String.format("%.6f", y));
                 pointPanel.setVisible(true);
-                mandelbrotComponent.setPoint(e.getPoint());
+                mandelbrotComponent.setCurrentMandelbrotPoint(e.getPoint());
                 try {
                     SwingUtilities.invokeLater(() -> {
                         mandelbrotComponent.repaint();
@@ -343,12 +350,47 @@ public class MandelbrotFrame extends JFrame {
 
             @Override
             public void mousePressed(MouseEvent e) {
-
+                mandelbrotComponent.setCurrentMandelbrotPoint(null);
+                Point p = e.getPoint();
+                mandelbrotComponent.setSelectionSquareStartingPoint(p);
+                mandelbrotComponent.setSelectionSquareEndingPoint(p);
+                try {
+                    SwingUtilities.invokeLater(() -> {
+                        mandelbrotComponent.revalidate();
+                        mandelbrotComponent.repaint();
+                    });
+                } catch (Exception exp) {
+                    System.out.println("Exception caught: " + exp.getMessage());
+                }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                Point topLeftCorner = mandelbrotComponent.getSelectionSquareTopLeftCorner();
+                int length = mandelbrotComponent.getSelectionSquareLength();
 
+                // convert the topLeftCorner point, in real coordinates.
+                Dimension dimension = mandelbrotComponent.getSize();
+                Double x = (mandelbrotComponent.getMandelbrotWidth() * topLeftCorner.getX()) / dimension.getWidth() + mandelbrotComponent.getMandelbrotLeftCornerX();
+                Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - (mandelbrotComponent.getMandelbrotHeight() * topLeftCorner.getY()) / dimension.getHeight();
+                mandelbrotComponent.setMandelbrotLeftCornerX(x);
+                mandelbrotComponent.setMandelbrotLeftCornerY(y);
+
+                double mandelbrotWidth = mandelbrotComponent.getMandelbrotWidth() * (length / (double) mandelbrotComponent.getPixelWidth());
+                double mandelbrotHeight = mandelbrotComponent.getMandelbrotHeight() * (length / (double) mandelbrotComponent.getPixelHeight());
+                mandelbrotComponent.setMandelbrotWidth(mandelbrotWidth);
+                mandelbrotComponent.setMandelbrotHeight(mandelbrotHeight);
+                mandelbrotComponent.setPixels2();
+                mandelbrotComponent.setSelectionSquareStartingPoint(null);// disabling selection mode.
+                mandelbrotComponent.setSelectionSquareEndingPoint(null);
+                try {
+                    SwingUtilities.invokeLater(() -> {
+                        mandelbrotComponent.revalidate();
+                        mandelbrotComponent.repaint();
+                    });
+                } catch (Exception exp) {
+                    System.out.println("Exception caught: " + exp.getMessage());
+                }
             }
 
             @Override
@@ -358,7 +400,7 @@ public class MandelbrotFrame extends JFrame {
 
             @Override
             public void mouseExited(MouseEvent e) {
-                mandelbrotComponent.setPoint(null);
+                mandelbrotComponent.setCurrentMandelbrotPoint(null);
                 pointPanel.setVisible(false);
                 try {
                     SwingUtilities.invokeLater(() -> {

@@ -21,7 +21,9 @@ public class MandelbrotComponent extends JComponent {
     Image mandelbrotImage;
     int[] pixels;
     boolean selectMode;
-    private Point point;
+    private Point currentMandelbrotPoint;
+    private Point selectionSquareStartingPoint, selectionSquareEndingPoint;
+    private int selectionSquareLength;
     private static final double MANDELBROT_INITIAL_WIDTH = 4.0;
     private static final double MANDELBROT_INITIAL_HEIGHT = 4.0;
     private static final double MANDELBROT_INITIAL_LEFT_CORNER_X = -2.0;
@@ -49,12 +51,12 @@ public class MandelbrotComponent extends JComponent {
         return this.maxIterations;
     }
 
-    public void setPoint(Point point) {
-        this.point = point;
+    public void setCurrentMandelbrotPoint(Point currentMandelbrotPoint) {
+        this.currentMandelbrotPoint = currentMandelbrotPoint;
     }
 
-    public Point getPoint() {
-        return this.point;
+    public Point getCurrentMandelbrotPoint() {
+        return this.currentMandelbrotPoint;
     }
 
     public MandelbrotComponent(int pixelWidth, int pixelHeight, double mandelbrotLeftCornerX, double mandelbrotLeftCornerY, double mandelbrotWidth, double mandelbrotHeight) {
@@ -126,6 +128,30 @@ public class MandelbrotComponent extends JComponent {
 
     public void resetScalingFactor() {
         this.scalingFactor = mandelbrotWidth / scalingFactorDivider;
+    }
+
+    public void setSelectionSquareStartingPoint(Point selectionSquareStartingPoint) {
+        this.selectionSquareStartingPoint = selectionSquareStartingPoint;
+    }
+
+    public Point getSelectionSquareStartingPoint() {
+        return this.selectionSquareStartingPoint;
+    }
+
+    public void setSelectionSquareEndingPoint(Point selectionSquareEndingPoint) {
+        this.selectionSquareEndingPoint = selectionSquareEndingPoint;
+    }
+
+    public Point getSelectionSquareEndingPoint() {
+        return this.selectionSquareEndingPoint;
+    }
+
+    public int getPixelHeight() {
+        return pixelHeight;
+    }
+
+    public int getPixelWidth() {
+        return pixelWidth;
     }
 
     public MandelbrotComponent(int pixelWidth, int pixelHeight) {
@@ -209,7 +235,7 @@ public class MandelbrotComponent extends JComponent {
                         LinearGradientPaint p = new LinearGradientPaint(start, end, dist, colors2);
 
                         //color = new Color(iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations);
-                        color = Color.getHSBColor((float) iterationsTookToEscape / maxIterations, 1.0f, 1.0f);
+                        //color = Color.getHSBColor((float) iterationsTookToEscape / maxIterations, 1.0f, 1.0f);
                     }
                     pixels[index++] = color.getRGB();
                 } catch (Exception exp) {
@@ -224,16 +250,13 @@ public class MandelbrotComponent extends JComponent {
         createImage();
     }
 
-    public void drawLines(BufferedImage image, Graphics2D graphics2D) {
-        if (point == null) {
+    public void drawMandelbrotIterationsLinesFromCurrentPoint(BufferedImage image, Graphics2D graphics2D) {
+        if (currentMandelbrotPoint == null) {
             return;
         }
-        // from the point calculate real co-ordinates
-        double lengthOfAPixelInMandelbrot = (mandelbrotWidth) / pixelWidth;
-        double heightOfAPixelInMandelbrot = (mandelbrotHeight) / pixelHeight;
         Dimension dimension = this.getSize();
-        double x = (this.getMandelbrotWidth() * point.getX()) / dimension.getWidth() + this.getMandelbrotLeftCornerX();
-        double y = this.getMandelbrotLeftCornerY() - (this.getMandelbrotHeight() * point.getY()) / dimension.getHeight();
+        double x = (this.getMandelbrotWidth() * currentMandelbrotPoint.getX()) / dimension.getWidth() + this.getMandelbrotLeftCornerX();
+        double y = this.getMandelbrotLeftCornerY() - (this.getMandelbrotHeight() * currentMandelbrotPoint.getY()) / dimension.getHeight();
         ArrayList<ComplexNumber> complexNumberList = calculateMandelbrotIterations(new ComplexNumber(x, y), FIRST_MANDELBROT_ITERATIONS_TO_STORE);
         ArrayList<Point> pointList = getPoints(complexNumberList);
         if (pointList == null) {
@@ -252,6 +275,31 @@ public class MandelbrotComponent extends JComponent {
             graphics2D.drawLine((int) points.get(0).getX(), (int) points.get(0).getY(),
                     (int) points.get(1).getX(), (int) points.get(1).getY());
         }
+    }
+
+    public void drawSelectionSquare(BufferedImage image, Graphics2D graphics2D) {
+        if (selectionSquareStartingPoint == null || selectionSquareEndingPoint == null) {
+            return;
+        }
+        //Get top left corner
+        Point topLeftCorner = getSelectionSquareTopLeftCorner();
+        // get length of the square.
+        int length = getSelectionSquareLength();
+        graphics2D.setStroke(new BasicStroke(LINE_THICKNESS));
+        graphics2D.setColor(LINE_COLOR);
+        graphics2D.drawRect((int) topLeftCorner.getX(), (int) topLeftCorner.getY(), length, length);
+    }
+
+    public Point getSelectionSquareTopLeftCorner() {
+        return new Point((int) Math.min(selectionSquareStartingPoint.getX(), selectionSquareEndingPoint.getX()),
+                (int) Math.min(selectionSquareStartingPoint.getY(), selectionSquareEndingPoint.getY()));
+    }
+
+    public int getSelectionSquareLength() {
+        double width, height;
+        width = Math.abs(selectionSquareStartingPoint.getX() - selectionSquareEndingPoint.getX());
+        height = Math.abs(selectionSquareStartingPoint.getY() - selectionSquareEndingPoint.getY());
+        return (int) Math.max(width, height);
     }
 
     public ArrayList<Point> getPoints(ArrayList<ComplexNumber> list) {
@@ -347,7 +395,8 @@ public class MandelbrotComponent extends JComponent {
         bufferedImage = new BufferedImage(mandelbrotImage.getWidth(null), mandelbrotImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics2D = (Graphics2D) bufferedImage.getGraphics();
         graphics2D.drawImage(mandelbrotImage, 0, 0, null);
-        drawLines(bufferedImage, graphics2D);
+        drawMandelbrotIterationsLinesFromCurrentPoint(bufferedImage, graphics2D);
+        drawSelectionSquare(bufferedImage, graphics2D);
         graphics2D.dispose();
         gg.drawImage(bufferedImage, x, y, w, h, 0, 0, bufferedImage.getWidth(null), bufferedImage.getHeight(null), null);
         if (this.isSelectMode()) {
