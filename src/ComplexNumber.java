@@ -29,7 +29,7 @@ public class ComplexNumber {
     public static ComplexNumber multiply(ComplexNumber a, ComplexNumber b) {
         double real, imaginary;
         real = a.getReal() * b.getReal() - a.getImaginary() * b.getImaginary();
-        imaginary = a.getReal() * b.getImaginary() + b.getImaginary() * b.getReal();
+        imaginary = a.getReal() * b.getImaginary() + a.getImaginary() * b.getReal();
         return new ComplexNumber(real, imaginary);
     }
 
