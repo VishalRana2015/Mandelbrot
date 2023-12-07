@@ -5,15 +5,20 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.MemoryImageSource;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MandelbrotComponent extends JComponent {
     int pixelWidth, pixelHeight;
     private double scalingFactor;
-    public static int INITIAL_ITERATIONS = 500;
+    public static int INITIAL_ITERATIONS = 2000;
     private int scalingFactorDivider = 10;
     private int maxIterations = 0;
     /* Mandelbrot function is f(x) = x^2 + c */
     private ComplexNumber z0;
+
+    private ExecutorService executorService;
 
     double mandelbrotLeftCornerX, mandelbrotLeftCornerY, mandelbrotCenterX, mandelbrotCenterY, mandelbrotWidth, mandelbrotHeight;
     /* mandelbrotFrameWidth and mandelbrotFrameHeight represents width and height of the graph in real numbers */
@@ -51,6 +56,8 @@ public class MandelbrotComponent extends JComponent {
         return this.maxIterations;
     }
 
+    private int THREAD_COUNT = 16;
+
     public void setCurrentMandelbrotPoint(Point currentMandelbrotPoint) {
         this.currentMandelbrotPoint = currentMandelbrotPoint;
     }
@@ -61,6 +68,7 @@ public class MandelbrotComponent extends JComponent {
 
     public MandelbrotComponent(int pixelWidth, int pixelHeight, double mandelbrotLeftCornerX, double mandelbrotLeftCornerY, double mandelbrotWidth, double mandelbrotHeight) {
         setSize(new Dimension(pixelWidth, pixelHeight));
+        executorService = Executors.newFixedThreadPool(THREAD_COUNT);
         this.mandelbrotLeftCornerX = mandelbrotLeftCornerX;
         this.mandelbrotLeftCornerY = mandelbrotLeftCornerY;
         this.mandelbrotCenterX = MANDELBROT_INITIAL_CENTER_X;
@@ -73,7 +81,8 @@ public class MandelbrotComponent extends JComponent {
         this.setZ0(new ComplexNumber(0, 0));
     }
 
-    private void createImage() {
+
+    public void createImage() {
         MemoryImageSource mis = new MemoryImageSource(pixelWidth, pixelHeight, pixels, 0, pixelWidth);
         this.mandelbrotImage = createImage(mis);
     }
@@ -205,46 +214,15 @@ public class MandelbrotComponent extends JComponent {
     public void setPixels2() {
         pixels = new int[pixelWidth * pixelHeight];
         // for each pixel in the mandelbrot image
-        int iterationColorRatio = (int) Math.ceil(((double) this.maxIterations) / colorArray.length);
-        int index = 0;
-        double lengthOfAPixelInMandelbrot = (mandelbrotWidth) / pixelWidth;
-        double heightOfAPixelInMandelbrot = (mandelbrotHeight) / pixelHeight;
+        ArrayList<Future> futureList = new ArrayList<>();
         for (int pixelY = 0; pixelY < pixelHeight; pixelY++) {
-            for (int pixelX = 0; pixelX < pixelWidth; pixelX++) {
-                // Now get what point current pixel represents in Mandelbrot image
-                double x, y;
-                x = lengthOfAPixelInMandelbrot * pixelX + mandelbrotLeftCornerX;
-                y = mandelbrotLeftCornerY - heightOfAPixelInMandelbrot * pixelY;
-                ArrayList<ComplexNumber> list = calculateMandelbrotIterations(new ComplexNumber(x, y), maxIterations);
-                ComplexNumber zn = list.get(list.size() - 1);
-                int iterationsTookToEscape = list.size();
-                try {
-                    Color color = Color.getHSBColor(((float) iterationsTookToEscape) / this.maxIterations, 1.0f, 1.0f);
-                    if (iterationsTookToEscape == 500) {
-                        color = Color.BLACK;
-                    } else {
-                        // nsmooth := n + 1 - Math.log(Math.log(zn.abs()))/Math.log(2)
-                        float nsmooth = iterationsTookToEscape + 1 - (float) (Math.log(Math.log(Math.sqrt(zn.getReal() * zn.getReal() + zn.getImaginary() * zn.getImaginary()))) / Math.log(2));
-                        // Color.HSBtoRGB(0.95f + 10 * smoothcolor ,0.6f,1.0f);
-                        color = Color.getHSBColor(0.95f + 10 * nsmooth, 0.6f, 1.0f);
-                        //color = colors[iterationsTookToEscape%colors.length];
-                        float[] dist = {0.0f, 0.2f, 1.0f};
-                        Point2D start = new Point2D.Float(0, 0);
-                        Point2D end = new Point2D.Float(50, 50);
-                        Color[] colors2 = {Color.RED, Color.WHITE, Color.BLUE};
-                        LinearGradientPaint p = new LinearGradientPaint(start, end, dist, colors2);
-
-                        //color = new Color(iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations);
-                        //color = Color.getHSBColor((float) iterationsTookToEscape / maxIterations, 1.0f, 1.0f);
-                    }
-                    pixels[index++] = color.getRGB();
-                } catch (Exception exp) {
-                    System.out.println("iterations : " + iterationsTookToEscape);
-                    System.out.println("iterationColorRatio : " + iterationColorRatio);
-                    System.out.println("colorArray.length: " + colorArray.length);
-                    exp.printStackTrace();
-                    throw new RuntimeException("Exception: " + exp.getMessage());
-                }
+            futureList.add(executorService.submit(new Task(this, pixelY, pixels)));
+        }
+        for (Future future : futureList) {
+            try {
+                future.get();
+            } catch (Exception exp) {
+                System.out.println("Exception thrown : " + exp.getMessage());
             }
         }
         createImage();
@@ -334,7 +312,7 @@ public class MandelbrotComponent extends JComponent {
         createImage();
     }
 
-    Color[] colorArray = {new Color(0, 0, 120),
+    public Color[] colorArray = {new Color(0, 0, 120),
             new Color(0, 0, 255),
             new Color(0, 120, 120),
             new Color(0, 200, 20),
@@ -418,6 +396,74 @@ public class MandelbrotComponent extends JComponent {
             System.out.println("e.getPreciseWheelRotation: " + e.getPreciseWheelRotation());
         });
     }
+
+
+    static class Task implements Runnable {
+        int col;
+        int[] pixels;
+        MandelbrotComponent mandelbrotComponent;
+
+        Task(MandelbrotComponent component, int col, int[] pixels) {
+            this.mandelbrotComponent = component;
+
+            this.col = col;
+            this.pixels = pixels;
+        }
+
+        @Override
+        public void run() {
+
+            int iterationColorRatio = (int) Math.ceil(((double) mandelbrotComponent.getMaxIterations()) / mandelbrotComponent.colorArray.length);
+            double lengthOfAPixelInMandelbrot = (mandelbrotComponent.getMandelbrotWidth()) / mandelbrotComponent.getPixelWidth();
+            double heightOfAPixelInMandelbrot = (mandelbrotComponent.getMandelbrotHeight()) / mandelbrotComponent.getPixelHeight();
+            int pixelY = col;
+            for (int pixelX = 0; pixelX < mandelbrotComponent.getPixelWidth(); pixelX++) {
+                // Now get what point current pixel represents in Mandelbrot image
+                double x, y;
+                x = lengthOfAPixelInMandelbrot * pixelX + mandelbrotComponent.getMandelbrotLeftCornerX();
+                y = mandelbrotComponent.getMandelbrotLeftCornerY() - heightOfAPixelInMandelbrot * pixelY;
+                ArrayList<ComplexNumber> list = mandelbrotComponent.calculateMandelbrotIterations(new ComplexNumber(x, y), mandelbrotComponent.getMaxIterations());
+                ComplexNumber zn = list.get(list.size() - 1);
+                int iterationsTookToEscape = list.size();
+                try {
+                    Color color = null;
+                    //Color.getHSBColor(((float) iterationsTookToEscape) / this.maxIterations, 1.0f, 1.0f);
+                    if (iterationsTookToEscape == 500) {
+                        color = Color.BLACK;
+                    } else {
+                        // nsmooth := n + 1 - Math.log(Math.log(zn.abs()))/Math.log(2)
+                        float nsmooth = iterationsTookToEscape + 1 - (float) (Math.log(Math.log(Math.sqrt(zn.getReal() * zn.getReal() + zn.getImaginary() * zn.getImaginary()))) / Math.log(2));
+                        // Color.HSBtoRGB(0.95f + 10 * smoothcolor ,0.6f,1.0f);
+                        //color = Color.getHSBColor(0.95f + 10 * nsmooth, 0.6f, 1.0f);
+                        color = mandelbrotComponent.colors[iterationsTookToEscape % mandelbrotComponent.colors.length];
+                        float[] dist = {0.0f, 0.2f, 1.0f};
+                        Point2D start = new Point2D.Float(0, 0);
+                        Point2D end = new Point2D.Float(50, 50);
+                        Color[] colors2 = {Color.RED, Color.WHITE, Color.BLUE};
+                        LinearGradientPaint p = new LinearGradientPaint(start, end, dist, colors2);
+
+                        //color = new Color(iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations);
+                        //color = Color.getHSBColor((float) iterationsTookToEscape / maxIterations, 1.0f, 1.0f);
+                    }
+                    pixels[pixelY * mandelbrotComponent.getPixelWidth() + pixelX] = color.getRGB();
+                } catch (Exception exp) {
+                    System.out.println("iterations : " + iterationsTookToEscape);
+                    System.out.println("iterationColorRatio : " + iterationColorRatio);
+                    System.out.println("colorArray.length: " + mandelbrotComponent.colorArray.length);
+                    exp.printStackTrace();
+                    throw new RuntimeException("Exception: " + exp.getMessage());
+                }
+            }
+
+//            SwingUtilities.invokeLater( ()-> {
+//                mandelbrotComponent.createImage();
+//                mandelbrotComponent.revalidate();
+//                mandelbrotComponent.repaint();
+//            });
+        }
+    }
 }
+
+
 
 

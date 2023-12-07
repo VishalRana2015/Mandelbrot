@@ -27,7 +27,7 @@ public class MandelbrotFrame extends JFrame {
 
     public MandelbrotFrame(String frameName) {
         super(frameName);
-        setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 22)));
+        setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 18)));
         this.setSize(new Dimension(1200, 800));
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
@@ -85,7 +85,7 @@ public class MandelbrotFrame extends JFrame {
         JLabel iterationsLabel = new JLabel("Set Iterations");
         iterationPanel.add(iterationsLabel, cont);
 
-        SpinnerNumberModel iterationsSpinnerNumberModel = new SpinnerNumberModel(mandelbrotComponent.getMaxIterations(), 1, 1000, 1);
+        SpinnerNumberModel iterationsSpinnerNumberModel = new SpinnerNumberModel(mandelbrotComponent.getMaxIterations(), 1, 5000, 1);
         iterationsSpinner = new JSpinner(iterationsSpinnerNumberModel);
 
         iterationsSpinner.addChangeListener(new ChangeListener() {
@@ -169,12 +169,12 @@ public class MandelbrotFrame extends JFrame {
         cont.anchor = GridBagConstraints.CENTER;
         zoomPanel.add(zoomLabel, cont);
 
-        zoomInButton = new JButton("Zoom In");
+        zoomInButton = new JButton("<html>Zoom In</html>");
         cont.gridy = 1;
         cont.anchor = GridBagConstraints.EAST;
         zoomPanel.add(zoomInButton, cont);
 
-        zoomOutButton = new JButton("Zoom Out");
+        zoomOutButton = new JButton("<html>Zoom Out</html>");
         cont.gridy = 1;
         cont.anchor = GridBagConstraints.WEST;
         zoomPanel.add(zoomOutButton, cont);
@@ -189,10 +189,10 @@ public class MandelbrotFrame extends JFrame {
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         // --------------------------------------------Move Left, Right, Up and Down-------------------------------------------------------------------------------------------------------
-        upButton = new JButton("Up");
-        downButton = new JButton("Down");
-        leftButton = new JButton("Left");
-        rightButton = new JButton("Right");
+        upButton = new JButton("<html>Up</html>");
+        downButton = new JButton("<html>Down</html>");
+        leftButton = new JButton("<html>Left</html>");
+        rightButton = new JButton("<html>Right</html>");
 
         JPanel movePanel = new JPanel();
         movePanel.setLayout(new GridBagLayout());
@@ -371,8 +371,8 @@ public class MandelbrotFrame extends JFrame {
 
                 // convert the topLeftCorner point, in real coordinates.
                 Dimension dimension = mandelbrotComponent.getSize();
-                Double x = (mandelbrotComponent.getMandelbrotWidth() * topLeftCorner.getX()) / dimension.getWidth() + mandelbrotComponent.getMandelbrotLeftCornerX();
-                Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - (mandelbrotComponent.getMandelbrotHeight() * topLeftCorner.getY()) / dimension.getHeight();
+                Double x = mandelbrotComponent.getMandelbrotWidth() * ((double) topLeftCorner.getX() / dimension.getWidth()) + mandelbrotComponent.getMandelbrotLeftCornerX();
+                Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - mandelbrotComponent.getMandelbrotHeight() * ((double) topLeftCorner.getY() / dimension.getHeight());
                 mandelbrotComponent.setMandelbrotLeftCornerX(x);
                 mandelbrotComponent.setMandelbrotLeftCornerY(y);
 
@@ -383,6 +383,7 @@ public class MandelbrotFrame extends JFrame {
                 mandelbrotComponent.setPixels2();
                 mandelbrotComponent.setSelectionSquareStartingPoint(null);// disabling selection mode.
                 mandelbrotComponent.setSelectionSquareEndingPoint(null);
+                mandelbrotComponent.resetScalingFactor();
                 try {
                     SwingUtilities.invokeLater(() -> {
                         mandelbrotComponent.revalidate();
