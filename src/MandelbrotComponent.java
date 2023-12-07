@@ -12,8 +12,9 @@ import java.util.concurrent.Future;
 public class MandelbrotComponent extends JComponent {
     int pixelWidth, pixelHeight;
     private double scalingFactor;
-    public static int INITIAL_ITERATIONS = 2000;
+    public static int INITIAL_ITERATIONS = 500;
     private int scalingFactorDivider = 10;
+    private MandelbrotColor mandelbrotColor;
     private int maxIterations = 0;
     /* Mandelbrot function is f(x) = x^2 + c */
     private ComplexNumber z0;
@@ -38,7 +39,7 @@ public class MandelbrotComponent extends JComponent {
     private static final int FIRST_MANDELBROT_ITERATIONS_TO_STORE = 100;
 
     private static final Color LINE_COLOR = Color.white;
-    private static final int LINE_THICKNESS = 2;
+    private static final int LINE_THICKNESS = 1;
 
     public void setSelectMode(boolean selectMode) {
         this.selectMode = selectMode;
@@ -66,7 +67,7 @@ public class MandelbrotComponent extends JComponent {
         return this.currentMandelbrotPoint;
     }
 
-    public MandelbrotComponent(int pixelWidth, int pixelHeight, double mandelbrotLeftCornerX, double mandelbrotLeftCornerY, double mandelbrotWidth, double mandelbrotHeight) {
+    public MandelbrotComponent(int pixelWidth, int pixelHeight, double mandelbrotLeftCornerX, double mandelbrotLeftCornerY, double mandelbrotWidth, double mandelbrotHeight) throws Exception {
         setSize(new Dimension(pixelWidth, pixelHeight));
         executorService = Executors.newFixedThreadPool(THREAD_COUNT);
         this.mandelbrotLeftCornerX = mandelbrotLeftCornerX;
@@ -79,6 +80,7 @@ public class MandelbrotComponent extends JComponent {
         this.setListeners();
         this.maxIterations = INITIAL_ITERATIONS;
         this.setZ0(new ComplexNumber(0, 0));
+        this.mandelbrotColor = new MandelbrotColor(colorArray);
     }
 
 
@@ -161,6 +163,14 @@ public class MandelbrotComponent extends JComponent {
 
     public int getPixelWidth() {
         return pixelWidth;
+    }
+
+    public MandelbrotColor getMandelbrotColor() {
+        return mandelbrotColor;
+    }
+
+    public void setMandelbrotColor(MandelbrotColor mandelbrotColor) {
+        this.mandelbrotColor = mandelbrotColor;
     }
 
     public MandelbrotComponent(int pixelWidth, int pixelHeight) {
@@ -312,7 +322,9 @@ public class MandelbrotComponent extends JComponent {
         createImage();
     }
 
-    public Color[] colorArray = {new Color(0, 0, 120),
+    public Color[] colorArray = {
+            new Color(255, 255, 200),
+            new Color(0, 0, 120),
             new Color(0, 0, 255),
             new Color(0, 120, 120),
             new Color(0, 200, 20),
@@ -323,8 +335,7 @@ public class MandelbrotComponent extends JComponent {
             new Color(200, 0, 0),
             new Color(120, 0, 0),
             new Color(70, 0, 0),
-            new Color(50, 0, 0),
-            new Color(255, 255, 200)};
+            new Color(50, 0, 0)};
 
 
     /**
@@ -405,7 +416,6 @@ public class MandelbrotComponent extends JComponent {
 
         Task(MandelbrotComponent component, int col, int[] pixels) {
             this.mandelbrotComponent = component;
-
             this.col = col;
             this.pixels = pixels;
         }
@@ -428,7 +438,7 @@ public class MandelbrotComponent extends JComponent {
                 try {
                     Color color = null;
                     //Color.getHSBColor(((float) iterationsTookToEscape) / this.maxIterations, 1.0f, 1.0f);
-                    if (iterationsTookToEscape == 500) {
+                    if (iterationsTookToEscape >= mandelbrotComponent.getMaxIterations()) {
                         color = Color.BLACK;
                     } else {
                         // nsmooth := n + 1 - Math.log(Math.log(zn.abs()))/Math.log(2)
@@ -442,8 +452,10 @@ public class MandelbrotComponent extends JComponent {
                         Color[] colors2 = {Color.RED, Color.WHITE, Color.BLUE};
                         LinearGradientPaint p = new LinearGradientPaint(start, end, dist, colors2);
 
+                        int maxIterations= mandelbrotComponent.getMaxIterations();
                         //color = new Color(iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations);
                         //color = Color.getHSBColor((float) iterationsTookToEscape / maxIterations, 1.0f, 1.0f);
+                        color = mandelbrotComponent.getMandelbrotColor().getColor(iterationsTookToEscape);
                     }
                     pixels[pixelY * mandelbrotComponent.getPixelWidth() + pixelX] = color.getRGB();
                 } catch (Exception exp) {
@@ -454,12 +466,6 @@ public class MandelbrotComponent extends JComponent {
                     throw new RuntimeException("Exception: " + exp.getMessage());
                 }
             }
-
-//            SwingUtilities.invokeLater( ()-> {
-//                mandelbrotComponent.createImage();
-//                mandelbrotComponent.revalidate();
-//                mandelbrotComponent.repaint();
-//            });
         }
     }
 }

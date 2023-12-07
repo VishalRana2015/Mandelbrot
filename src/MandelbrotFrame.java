@@ -25,7 +25,7 @@ public class MandelbrotFrame extends JFrame {
     boolean isTriggered;
     private Timer timer;
 
-    public MandelbrotFrame(String frameName) {
+    public MandelbrotFrame(String frameName) throws Exception {
         super(frameName);
         setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 18)));
         this.setSize(new Dimension(1200, 800));
