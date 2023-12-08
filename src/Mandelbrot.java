@@ -2,7 +2,7 @@
 import javax.swing.*;
 import java.awt.*;
 
-public class Mandlebrot {
+public class Mandelbrot {
 
     public static void main(String[] args) {
         UIManager.getLookAndFeelDefaults()

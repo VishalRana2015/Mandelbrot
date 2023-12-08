@@ -20,6 +20,8 @@ public class MandelbrotFrame extends JFrame {
     private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton;
     private static JLabel xValueLabel, yValueLabel;
     private static JPanel pointPanel;
+    private static JSlider paletteSlider;
+    private static JTextField paletteValueField;
     private JSpinner iterationsSpinner;
 
     boolean isTriggered;
@@ -82,20 +84,12 @@ public class MandelbrotFrame extends JFrame {
         cont.weightx = 1;
         cont.weighty = 1;
         cont.gridwidth = 1;
-        JLabel iterationsLabel = new JLabel("Set Iterations");
+        JLabel iterationsLabel = new JLabel("<html>Set Iterations</html>");
         iterationPanel.add(iterationsLabel, cont);
 
         SpinnerNumberModel iterationsSpinnerNumberModel = new SpinnerNumberModel(mandelbrotComponent.getMaxIterations(), 1, 5000, 1);
         iterationsSpinner = new JSpinner(iterationsSpinnerNumberModel);
 
-        iterationsSpinner.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                JSpinner spinner = (JSpinner) e.getSource();
-                mandelbrotComponent.setMaxIterations((Integer) spinner.getValue());
-                updateUI();
-            }
-        });
         cont.gridy = 2;
         iterationPanel.add(iterationsSpinner, cont);
         iterationPanel.setMaximumSize(iterationPanel.getPreferredSize());
@@ -230,6 +224,29 @@ public class MandelbrotFrame extends JFrame {
         panel.add(separator4);
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
+        //--------------------------- Palette Length -------------------------------------------------------------------------------------------//
+        JPanel palettePanel = new JPanel();
+        BoxLayout palettePanelBoxLayout = new BoxLayout(palettePanel,BoxLayout.Y_AXIS);
+        palettePanel.setLayout(palettePanelBoxLayout);
+        JLabel paletteLabel = new JLabel("<html>Palette Length</html>");
+        palettePanel.add(paletteLabel);
+        paletteSlider = new JSlider(1, mandelbrotComponent.getMaxIterations());
+        paletteSlider.setValue(mandelbrotComponent.getMandelbrotColor().getPaletteLength()); // initial palette length
+        palettePanel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
+        palettePanel.add(paletteSlider);
+        paletteValueField = new JTextField();
+        paletteValueField.setText(paletteSlider.getValue() + "");
+        paletteValueField.setMaximumSize(paletteValueField.getPreferredSize());
+        paletteValueField.setMinimumSize(paletteValueField.getPreferredSize());
+        paletteValueField.setDisabledTextColor(Color.BLACK);
+        paletteValueField.disable();
+        palettePanel.add(paletteValueField);
+
+        panel.add(palettePanel);
+        panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
+        panel.add(createSeparator());
+        panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
+
         //----------------------------------------------------------------------------------------------------------------------
         pointPanel = new JPanel();
         pointPanel.setLayout(new GridBagLayout());
@@ -261,6 +278,10 @@ public class MandelbrotFrame extends JFrame {
         pointPanel.add(Box.createVerticalGlue());
 
         return panel;
+    }
+
+    private static JSeparator createSeparator(){
+        return new JSeparator(JSeparator.HORIZONTAL);
     }
 
 
@@ -413,6 +434,24 @@ public class MandelbrotFrame extends JFrame {
                     System.out.println("Exception caught: " + exp.getMessage());
                 }
             }
+        });
+
+        iterationsSpinner.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                JSpinner spinner = (JSpinner) e.getSource();
+                mandelbrotComponent.setMaxIterations((Integer) spinner.getValue());
+                paletteSlider.setMaximum((int)spinner.getValue());
+                updateUI();
+            }
+        });
+
+        paletteSlider.addChangeListener( (ChangeEvent e) -> {
+            JSlider slider = (JSlider)e.getSource();
+            int value = slider.getValue();
+            paletteValueField.setText(String.valueOf(value));
+            mandelbrotComponent.getMandelbrotColor().setPaletteLength(value);
+            updateUI();
         });
     }
 
