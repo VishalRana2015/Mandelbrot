@@ -475,7 +475,11 @@ public class MandelbrotFrame extends JFrame {
             int value = slider.getValue();
             paletteValueField.setText(String.valueOf(value));
             mandelbrotComponent.getMandelbrotColor().setPaletteLength(value);
-            updateUI();
+            SwingUtilities.invokeLater(() -> {
+                mandelbrotComponent.createImage();
+                mandelbrotComponent.revalidate();
+                mandelbrotComponent.repaint();
+            });
         });
     }
 

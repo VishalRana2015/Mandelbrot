@@ -37,6 +37,7 @@ public class MandelbrotComponent extends JComponent {
     private static final double MANDELBROT_INITIAL_CENTER_X = 0.0;
     private static final double MANDELBROT_INITIAL_CENTER_Y = 0.0;
     private static final int FIRST_MANDELBROT_ITERATIONS_TO_STORE = 100;
+    private int[] iterationsCountArray;
 
     private static final Color LINE_COLOR = Color.white;
     private static final int LINE_THICKNESS = 1;
@@ -80,13 +81,22 @@ public class MandelbrotComponent extends JComponent {
         this.setListeners();
         this.maxIterations = INITIAL_ITERATIONS;
         this.setZ0(new ComplexNumber(0, 0));
-        this.mandelbrotColor = new MandelbrotColor(colorArray);
+        this.mandelbrotColor = new MandelbrotColor(this, colorArray);
     }
 
 
     public void createImage() {
+        setColor();
         MemoryImageSource mis = new MemoryImageSource(pixelWidth, pixelHeight, pixels, 0, pixelWidth);
         this.mandelbrotImage = createImage(mis);
+    }
+
+    public void setColor(){
+        for ( int pixelY = 0; pixelY < pixelHeight; pixelY++){
+            for ( int pixelX= 0; pixelX < pixelWidth; pixelX++){
+                pixels[pixelY * pixelWidth + pixelX] = mandelbrotColor.getColor( iterationsCountArray[pixelY * pixelWidth + pixelX]).getRGB();
+            }
+        }
     }
 
     public void setScalingFactor(double scalingFactor) {
@@ -210,6 +220,7 @@ public class MandelbrotComponent extends JComponent {
         this.setMinimumSize(new Dimension(pixelWidth, pixelHeight));
         // Creating a mandelbrot image
         pixels = new int[pixelWidth * pixelHeight];
+        iterationsCountArray = new int[pixelWidth * pixelHeight];
 
     }
 
@@ -291,7 +302,7 @@ public class MandelbrotComponent extends JComponent {
     }
 
     public int getIterationsFor(Point p) {
-        return 100;
+        return iterationsCountArray[(int)p.getX() + (int)p.getY()* pixelWidth];
     }
 
     public ArrayList<Point> getPoints(ArrayList<ComplexNumber> list) {
@@ -327,7 +338,7 @@ public class MandelbrotComponent extends JComponent {
     }
 
     public Color[] colorArray = {
-            new Color(255, 255, 200),
+          //  new Color(255, 255, 200), // this color was adding nuisance
             new Color(0, 0, 120),
             new Color(0, 0, 255),
             new Color(0, 120, 120),
@@ -439,22 +450,11 @@ public class MandelbrotComponent extends JComponent {
                 ArrayList<ComplexNumber> list = mandelbrotComponent.calculateMandelbrotIterations(new ComplexNumber(x, y), mandelbrotComponent.getMaxIterations());
                 ComplexNumber zn = list.get(list.size() - 1);
                 int iterationsTookToEscape = list.size();
-                try {
-                    Color color = null;
-                    //Color.getHSBColor(((float) iterationsTookToEscape) / this.maxIterations, 1.0f, 1.0f);
-                    if (iterationsTookToEscape >= mandelbrotComponent.getMaxIterations()) {
-                        color = Color.BLACK;
-                    } else {
-                        color = mandelbrotComponent.getMandelbrotColor().getColor(iterationsTookToEscape);
-                    }
-                    pixels[pixelY * mandelbrotComponent.getPixelWidth() + pixelX] = color.getRGB();
-                } catch (Exception exp) {
-                    System.out.println("iterations : " + iterationsTookToEscape);
-                    System.out.println("iterationColorRatio : " + iterationColorRatio);
-                    System.out.println("colorArray.length: " + mandelbrotComponent.colorArray.length);
-                    exp.printStackTrace();
-                    throw new RuntimeException("Exception: " + exp.getMessage());
-                }
+
+                Color color = null;
+                //Color.getHSBColor(((float) iterationsTookToEscape) / this.maxIterations, 1.0f, 1.0f);
+                mandelbrotComponent.iterationsCountArray[pixelY * mandelbrotComponent.getPixelWidth() + pixelX] = iterationsTookToEscape;
+                //pixels[pixelY * mandelbrotComponent.getPixelWidth() + pixelX] = color.getRGB();
             }
         }
     }
