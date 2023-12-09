@@ -416,8 +416,8 @@ public class MandelbrotFrame extends JFrame {
 
                 // convert the topLeftCorner point, in real coordinates.
                 Dimension dimension = mandelbrotComponent.getSize();
-                Double x = mandelbrotComponent.getMandelbrotWidth() * ((double) topLeftCorner.getX() / dimension.getWidth()) + mandelbrotComponent.getMandelbrotLeftCornerX();
-                Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - mandelbrotComponent.getMandelbrotHeight() * ((double) topLeftCorner.getY() / dimension.getHeight());
+                Double x = mandelbrotComponent.getMandelbrotWidth() * ((double) topLeftCorner.getX() / mandelbrotComponent.getPixelWidth()) + mandelbrotComponent.getMandelbrotLeftCornerX();
+                Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - mandelbrotComponent.getMandelbrotHeight() * ((double) topLeftCorner.getY() / mandelbrotComponent.getPixelHeight());
                 mandelbrotComponent.setMandelbrotLeftCornerX(x);
                 mandelbrotComponent.setMandelbrotLeftCornerY(y);
 

@@ -40,7 +40,7 @@ public class MandelbrotComponent extends JComponent {
     private int[] iterationsCountArray;
 
     private static final Color LINE_COLOR = Color.white;
-    private static final int LINE_THICKNESS = 1;
+    private static final int LINE_THICKNESS = 2;
 
     public void setSelectMode(boolean selectMode) {
         this.selectMode = selectMode;
@@ -91,10 +91,10 @@ public class MandelbrotComponent extends JComponent {
         this.mandelbrotImage = createImage(mis);
     }
 
-    public void setColor(){
-        for ( int pixelY = 0; pixelY < pixelHeight; pixelY++){
-            for ( int pixelX= 0; pixelX < pixelWidth; pixelX++){
-                pixels[pixelY * pixelWidth + pixelX] = mandelbrotColor.getColor( iterationsCountArray[pixelY * pixelWidth + pixelX]).getRGB();
+    public void setColor() {
+        for (int pixelY = 0; pixelY < pixelHeight; pixelY++) {
+            for (int pixelX = 0; pixelX < pixelWidth; pixelX++) {
+                pixels[pixelY * pixelWidth + pixelX] = mandelbrotColor.getColor(iterationsCountArray[pixelY * pixelWidth + pixelX]).getRGB();
             }
         }
     }
@@ -151,8 +151,28 @@ public class MandelbrotComponent extends JComponent {
         this.scalingFactor = mandelbrotWidth / scalingFactorDivider;
     }
 
+    // returns pixel coordinates from the given coordinates.
+    /* The given coordinate is co-ordinate from the mandelbrot component, and returned coordinate is from the pixels array.
+        Mandelbrot component can be in its full size or not,
+        If the mandelbrot component is in its full size, then a pixel coordinates values in the mandelbrot component as well as in the image is same,
+        However, if the mandelbrot component is smaller than its full size, in that case a coordinates value in mandelbrot component will not be pointing to the pixel with same coordinate value, as the
+        image created by pixels get resized proportionally to get fit in the available space.
+
+        That is where we need to have exact value of pixel coordinate from a Point in mandelbrot frame
+     */
+    public Point getPixelCoordinatesAt(Point point) {
+        if ( point == null){
+            return null;
+        }
+        Dimension dimension = this.getSize();
+        double x = (pixelWidth / dimension.getWidth()) * point.getX();
+        double y = (pixelHeight / dimension.getHeight()) * point.getY();
+        Point pixelPoint = new Point((int) x, (int) y);
+        return pixelPoint;
+    }
+
     public void setSelectionSquareStartingPoint(Point selectionSquareStartingPoint) {
-        this.selectionSquareStartingPoint = selectionSquareStartingPoint;
+        this.selectionSquareStartingPoint = getPixelCoordinatesAt(selectionSquareStartingPoint);
     }
 
     public Point getSelectionSquareStartingPoint() {
@@ -160,7 +180,7 @@ public class MandelbrotComponent extends JComponent {
     }
 
     public void setSelectionSquareEndingPoint(Point selectionSquareEndingPoint) {
-        this.selectionSquareEndingPoint = selectionSquareEndingPoint;
+        this.selectionSquareEndingPoint = getPixelCoordinatesAt(selectionSquareEndingPoint);
     }
 
     public Point getSelectionSquareEndingPoint() {
@@ -302,7 +322,7 @@ public class MandelbrotComponent extends JComponent {
     }
 
     public int getIterationsFor(Point p) {
-        return iterationsCountArray[(int)p.getX() + (int)p.getY()* pixelWidth];
+        return iterationsCountArray[(int) p.getX() + (int) p.getY() * pixelWidth];
     }
 
     public ArrayList<Point> getPoints(ArrayList<ComplexNumber> list) {
@@ -338,7 +358,7 @@ public class MandelbrotComponent extends JComponent {
     }
 
     public Color[] colorArray = {
-          //  new Color(255, 255, 200), // this color was adding nuisance
+            //  new Color(255, 255, 200), // this color was adding nuisance
             new Color(0, 0, 120),
             new Color(0, 0, 255),
             new Color(0, 120, 120),
