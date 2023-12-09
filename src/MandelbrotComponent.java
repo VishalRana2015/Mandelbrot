@@ -290,6 +290,10 @@ public class MandelbrotComponent extends JComponent {
         return (int) Math.max(width, height);
     }
 
+    public int getIterationsFor(Point p) {
+        return 100;
+    }
+
     public ArrayList<Point> getPoints(ArrayList<ComplexNumber> list) {
         double lengthOfAPixelInMandelbrot = (mandelbrotWidth) / pixelWidth;
         double heightOfAPixelInMandelbrot = (mandelbrotHeight) / pixelHeight;
@@ -441,20 +445,6 @@ public class MandelbrotComponent extends JComponent {
                     if (iterationsTookToEscape >= mandelbrotComponent.getMaxIterations()) {
                         color = Color.BLACK;
                     } else {
-                        // nsmooth := n + 1 - Math.log(Math.log(zn.abs()))/Math.log(2)
-                        float nsmooth = iterationsTookToEscape + 1 - (float) (Math.log(Math.log(Math.sqrt(zn.getReal() * zn.getReal() + zn.getImaginary() * zn.getImaginary()))) / Math.log(2));
-                        // Color.HSBtoRGB(0.95f + 10 * smoothcolor ,0.6f,1.0f);
-                        //color = Color.getHSBColor(0.95f + 10 * nsmooth, 0.6f, 1.0f);
-                        color = mandelbrotComponent.colors[iterationsTookToEscape % mandelbrotComponent.colors.length];
-                        float[] dist = {0.0f, 0.2f, 1.0f};
-                        Point2D start = new Point2D.Float(0, 0);
-                        Point2D end = new Point2D.Float(50, 50);
-                        Color[] colors2 = {Color.RED, Color.WHITE, Color.BLUE};
-                        LinearGradientPaint p = new LinearGradientPaint(start, end, dist, colors2);
-
-                        int maxIterations= mandelbrotComponent.getMaxIterations();
-                        //color = new Color(iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations, iterationsTookToEscape*255/maxIterations);
-                        //color = Color.getHSBColor((float) iterationsTookToEscape / maxIterations, 1.0f, 1.0f);
                         color = mandelbrotComponent.getMandelbrotColor().getColor(iterationsTookToEscape);
                     }
                     pixels[pixelY * mandelbrotComponent.getPixelWidth() + pixelX] = color.getRGB();

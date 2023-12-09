@@ -18,7 +18,7 @@ public class MandelbrotFrame extends JFrame {
     public static int MENU_MINIMUM_WIDTH = 300;
     public static int VERTICAL_STRUCT_HEIGHT = 5;
     private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton;
-    private static JLabel xValueLabel, yValueLabel;
+    private static JLabel xValueLabel, yValueLabel, iterationsCountLabel;
     private static JPanel pointPanel;
     private static JSlider paletteSlider;
     private static JTextField paletteValueField;
@@ -226,7 +226,7 @@ public class MandelbrotFrame extends JFrame {
 
         //--------------------------- Palette Length -------------------------------------------------------------------------------------------//
         JPanel palettePanel = new JPanel();
-        BoxLayout palettePanelBoxLayout = new BoxLayout(palettePanel,BoxLayout.Y_AXIS);
+        BoxLayout palettePanelBoxLayout = new BoxLayout(palettePanel, BoxLayout.Y_AXIS);
         palettePanel.setLayout(palettePanelBoxLayout);
         JLabel paletteLabel = new JLabel("<html>Palette Length</html>");
         palettePanel.add(paletteLabel);
@@ -254,25 +254,44 @@ public class MandelbrotFrame extends JFrame {
         cont.gridy = 0;
         cont.gridwidth = 1;
         cont.gridheight = 1;
-        cont.weightx = 0.25;
+        cont.weightx = 1;
+        cont.weighty = 1;
         cont.anchor = GridBagConstraints.EAST;
-        pointPanel.add(new JLabel("<html>x:&nbsp</html>"), cont);
+        pointPanel.add(new JLabel("<html>x:&nbsp&nbsp</html>"), cont);
         xValueLabel = new JLabel("xValue");
         cont.gridx = 1;
         cont.anchor = GridBagConstraints.WEST;
         pointPanel.add(xValueLabel, cont);
         cont.gridx = 2;
         cont.anchor = GridBagConstraints.EAST;
-        pointPanel.add(new JLabel("<html>y:&nbsp</html>"), cont);
+        pointPanel.add(new JLabel("<html>y:&nbsp&nbsp</html>"), cont);
         yValueLabel = new JLabel("yValue");
         cont.gridx = 3;
         cont.anchor = GridBagConstraints.WEST;
         pointPanel.add(yValueLabel, cont);
-        panel.add(pointPanel);
+
+        JLabel iterationsCountTextLabel = new JLabel("<html>Iterations took to escape:</html>");
+        cont.gridwidth = 3; // I want it this to be 2 column wide component, this make
+        cont.fill = GridBagConstraints.HORIZONTAL;
+        cont.gridy = 2;
+        cont.gridx = 0;
+        cont.anchor = GridBagConstraints.EAST;
+        pointPanel.add(iterationsCountTextLabel, cont);
+
+        cont.gridx = 3; // align the component starting from the second column in the grid
+        cont.gridwidth = 2; // this component should also be two column wide
+        // Since the weight of all the components in the second row is same, therefore each column has equal area
+        cont.anchor = GridBagConstraints.EAST;
+        cont.ipadx = 10;
+        iterationsCountLabel = new JLabel("count");
+        pointPanel.add(iterationsCountLabel, cont);
+
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
         panel.add(new JSeparator(JSeparator.HORIZONTAL));
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
         pointPanel.setVisible(false);
+        panel.add(pointPanel);
+
 
         //---------------------------------------------------------------------------------------------------
         pointPanel.add(Box.createVerticalGlue());
@@ -280,7 +299,7 @@ public class MandelbrotFrame extends JFrame {
         return panel;
     }
 
-    private static JSeparator createSeparator(){
+    private static JSeparator createSeparator() {
         return new JSeparator(JSeparator.HORIZONTAL);
     }
 
@@ -349,6 +368,11 @@ public class MandelbrotFrame extends JFrame {
                 Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - (mandelbrotComponent.getMandelbrotHeight() * p.getY()) / dimension.getHeight();
                 xValueLabel.setText(String.format("%.6f", x));
                 yValueLabel.setText(String.format("%.6f", y));
+                // convert these points in pixel coordinates or image coordinates
+                double pixelX = (mandelbrotComponent.getPixelWidth() / mandelbrotComponent.getMandelbrotWidth()) * (x - mandelbrotComponent.getMandelbrotLeftCornerX());
+                double pixelY = (mandelbrotComponent.getPixelHeight() / mandelbrotComponent.getMandelbrotHeight()) * (mandelbrotComponent.getMandelbrotLeftCornerY() - y);
+                Point pixelPoint = new Point((int) pixelX, (int) pixelY);
+                iterationsCountLabel.setText(String.valueOf(mandelbrotComponent.getIterationsFor(pixelPoint)));
                 pointPanel.setVisible(true);
                 mandelbrotComponent.setCurrentMandelbrotPoint(e.getPoint());
                 try {
@@ -441,13 +465,13 @@ public class MandelbrotFrame extends JFrame {
             public void stateChanged(ChangeEvent e) {
                 JSpinner spinner = (JSpinner) e.getSource();
                 mandelbrotComponent.setMaxIterations((Integer) spinner.getValue());
-                paletteSlider.setMaximum((int)spinner.getValue());
+                paletteSlider.setMaximum((int) spinner.getValue());
                 updateUI();
             }
         });
 
-        paletteSlider.addChangeListener( (ChangeEvent e) -> {
-            JSlider slider = (JSlider)e.getSource();
+        paletteSlider.addChangeListener((ChangeEvent e) -> {
+            JSlider slider = (JSlider) e.getSource();
             int value = slider.getValue();
             paletteValueField.setText(String.valueOf(value));
             mandelbrotComponent.getMandelbrotColor().setPaletteLength(value);
