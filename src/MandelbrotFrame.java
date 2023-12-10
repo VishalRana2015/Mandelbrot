@@ -18,7 +18,7 @@ public class MandelbrotFrame extends JFrame {
     public static int MENU_MINIMUM_WIDTH = 300;
     public static int VERTICAL_STRUCT_HEIGHT = 5;
     private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton;
-    private static JLabel xValueLabel, yValueLabel, iterationsCountLabel;
+    private static JLabel xValueLabel, yValueLabel, currentPixelIterationCountLabel;
     private static JPanel pointPanel;
     private static JSlider paletteSlider;
     private static JTextField paletteValueField;
@@ -29,7 +29,7 @@ public class MandelbrotFrame extends JFrame {
 
     public MandelbrotFrame(String frameName) throws Exception {
         super(frameName);
-        setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 18)));
+        setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 14)));
         this.setSize(new Dimension(1200, 800));
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
@@ -250,51 +250,70 @@ public class MandelbrotFrame extends JFrame {
         //----------------------------------------------------------------------------------------------------------------------
         pointPanel = new JPanel();
         pointPanel.setLayout(new GridBagLayout());
+        cont = new GridBagConstraints();
+        xValueLabel = new JLabel("xValue");
+        yValueLabel = new JLabel("yValue");
+        currentPixelIterationCountLabel = new JLabel("count");
+
+        //printing x-value in the first row
         cont.gridx = 0;
         cont.gridy = 0;
+        cont.weighty = 1;
+        cont.weightx = 1;
+        cont.anchor = GridBagConstraints.EAST;
         cont.gridwidth = 1;
         cont.gridheight = 1;
-        cont.weightx = 1;
-        cont.weighty = 1;
-        cont.anchor = GridBagConstraints.EAST;
-        pointPanel.add(new JLabel("<html>x:&nbsp&nbsp</html>"), cont);
-        xValueLabel = new JLabel("xValue");
+        pointPanel.add(new JLabel("<html>x:&nbsp</html>"), cont);
+
+        cont.gridwidth = 3;
         cont.gridx = 1;
         cont.anchor = GridBagConstraints.WEST;
         pointPanel.add(xValueLabel, cont);
-        cont.gridx = 2;
+
+        // printing y value in the second row
+        cont.gridx = 0;
+        cont.gridy = 1;
+        cont.gridwidth = 1;
         cont.anchor = GridBagConstraints.EAST;
-        pointPanel.add(new JLabel("<html>y:&nbsp&nbsp</html>"), cont);
-        yValueLabel = new JLabel("yValue");
-        cont.gridx = 3;
+        pointPanel.add(new JLabel("<html>y:&nbsp</html>"),cont);
+
+        cont.gridx = 1;
+        cont.gridwidth = 3;
         cont.anchor = GridBagConstraints.WEST;
         pointPanel.add(yValueLabel, cont);
 
-        JLabel iterationsCountTextLabel = new JLabel("<html>Iterations took to escape:</html>");
-        cont.gridwidth = 3; // I want it this to be 2 column wide component, this make
-        cont.fill = GridBagConstraints.HORIZONTAL;
-        cont.gridy = 2;
+        //-- printing iteration in the third row
+        JPanel currentPixelEscapeIterationsCountShowPanel = new JPanel();
+        currentPixelEscapeIterationsCountShowPanel.setLayout(new GridBagLayout());
+        JLabel iterationTextLabel = new JLabel("<html>Iterations took to escape:&nbsp</html>");
         cont.gridx = 0;
-        cont.anchor = GridBagConstraints.EAST;
-        pointPanel.add(iterationsCountTextLabel, cont);
+        cont.gridy = 0;
+        cont.weightx = 3;
+        cont.gridwidth = 1;
+        cont.anchor = GridBagConstraints.CENTER;
+        currentPixelEscapeIterationsCountShowPanel.add(iterationTextLabel, cont);
 
-        cont.gridx = 3; // align the component starting from the second column in the grid
-        cont.gridwidth = 2; // this component should also be two column wide
-        // Since the weight of all the components in the second row is same, therefore each column has equal area
-        cont.anchor = GridBagConstraints.EAST;
-        cont.ipadx = 10;
-        iterationsCountLabel = new JLabel("count");
-        pointPanel.add(iterationsCountLabel, cont);
+        currentPixelIterationCountLabel = new JLabel("<html></html>");
+        cont.gridx = 1;
+        cont.gridy = 0;
+        cont.weightx = 1;
+        cont.gridwidth = 1;
+        cont.anchor = GridBagConstraints.WEST;
+        currentPixelEscapeIterationsCountShowPanel.add(currentPixelIterationCountLabel, cont);
+
+        cont.gridx = 0;
+        cont.gridy = 2;
+        cont.fill = GridBagConstraints.HORIZONTAL;
+        cont.gridwidth = 4;
+        pointPanel.add(currentPixelEscapeIterationsCountShowPanel, cont);
+        panel.add(pointPanel);
+
 
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
         panel.add(new JSeparator(JSeparator.HORIZONTAL));
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        pointPanel.setVisible(false);
-        panel.add(pointPanel);
-
 
         //---------------------------------------------------------------------------------------------------
-        pointPanel.add(Box.createVerticalGlue());
 
         return panel;
     }
@@ -366,13 +385,13 @@ public class MandelbrotFrame extends JFrame {
                 Dimension dimension = mandelbrotComponent.getSize();
                 Double x = (mandelbrotComponent.getMandelbrotWidth() * p.getX()) / dimension.getWidth() + mandelbrotComponent.getMandelbrotLeftCornerX();
                 Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - (mandelbrotComponent.getMandelbrotHeight() * p.getY()) / dimension.getHeight();
-                xValueLabel.setText(String.format("%.6f", x));
-                yValueLabel.setText(String.format("%.6f", y));
+                xValueLabel.setText(String.format("%.20f", x));
+                yValueLabel.setText(String.format("%.20f", y));
                 // convert these points in pixel coordinates or image coordinates
                 double pixelX = (mandelbrotComponent.getPixelWidth() / mandelbrotComponent.getMandelbrotWidth()) * (x - mandelbrotComponent.getMandelbrotLeftCornerX());
                 double pixelY = (mandelbrotComponent.getPixelHeight() / mandelbrotComponent.getMandelbrotHeight()) * (mandelbrotComponent.getMandelbrotLeftCornerY() - y);
                 Point pixelPoint = new Point((int) pixelX, (int) pixelY);
-                iterationsCountLabel.setText(String.valueOf(mandelbrotComponent.getIterationsFor(pixelPoint)));
+                currentPixelIterationCountLabel.setText(String.valueOf(mandelbrotComponent.getIterationsFor(pixelPoint)));
                 pointPanel.setVisible(true);
                 mandelbrotComponent.setCurrentMandelbrotPoint(e.getPoint());
                 try {
