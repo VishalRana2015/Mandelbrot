@@ -99,7 +99,6 @@ public class MandelbrotFrame extends JFrame {
         iterationPanel.setMinimumSize(new Dimension(MENU_MINIMUM_WIDTH, 50));
         iterationPanel.setPreferredSize(new Dimension(MENU_MINIMUM_WIDTH, 50));
         iterationPanel.setMaximumSize(iterationPanel.getPreferredSize());
-        iterationPanel.setBackground(Color.PINK);
         panel.add(iterationPanel);
 
         // ------------------------------------------------------------z0 Panel-----------------------------------------------------------------------------------------------------------------------------
@@ -180,7 +179,6 @@ public class MandelbrotFrame extends JFrame {
 
         zoomPanel.setMinimumSize(new Dimension(MENU_MAXIMUM_WIDTH, (int) zoomPanel.getPreferredSize().getHeight()));
         zoomPanel.setMaximumSize(new Dimension(MENU_MAXIMUM_WIDTH, (int) zoomPanel.getPreferredSize().getHeight()));
-        zoomPanel.setBackground(Color.PINK);
         panel.add(zoomPanel);
 
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
@@ -331,8 +329,7 @@ public class MandelbrotFrame extends JFrame {
         resetPanel.setMinimumSize(new Dimension(MENU_MAXIMUM_WIDTH, 50));
         resetPanel.setPreferredSize(new Dimension(MENU_MAXIMUM_WIDTH, 50));
         resetPanel.setMaximumSize(new Dimension(MENU_MINIMUM_WIDTH, 50));
-        resetPanel.setBackground(Color.PINK);
-        panel.add(resetPanel);
+g        panel.add(resetPanel);
         return panel;
     }
 
