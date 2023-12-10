@@ -329,7 +329,7 @@ public class MandelbrotFrame extends JFrame {
         resetPanel.setMinimumSize(new Dimension(MENU_MAXIMUM_WIDTH, 50));
         resetPanel.setPreferredSize(new Dimension(MENU_MAXIMUM_WIDTH, 50));
         resetPanel.setMaximumSize(new Dimension(MENU_MINIMUM_WIDTH, 50));
-g        panel.add(resetPanel);
+        panel.add(resetPanel);
         return panel;
     }
 
