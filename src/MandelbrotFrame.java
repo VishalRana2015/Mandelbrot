@@ -17,7 +17,7 @@ public class MandelbrotFrame extends JFrame {
     public static int MENU_MAXIMUM_WIDTH = 500;
     public static int MENU_MINIMUM_WIDTH = 300;
     public static int VERTICAL_STRUCT_HEIGHT = 5;
-    private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton;
+    private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton, resetButton;
     private static JLabel xValueLabel, yValueLabel, currentPixelIterationCountLabel;
     private static JPanel pointPanel;
     private static JSlider paletteSlider;
@@ -92,7 +92,10 @@ public class MandelbrotFrame extends JFrame {
 
         cont.gridy = 2;
         iterationPanel.add(iterationsSpinner, cont);
+        iterationPanel.setMinimumSize(new Dimension(MENU_MINIMUM_WIDTH, 50));
+        iterationPanel.setPreferredSize(new Dimension(MENU_MINIMUM_WIDTH, 50));
         iterationPanel.setMaximumSize(iterationPanel.getPreferredSize());
+        iterationPanel.setBackground(Color.PINK);
         panel.add(iterationPanel);
 
         // ------------------------------------------------------------z0 Panel-----------------------------------------------------------------------------------------------------------------------------
