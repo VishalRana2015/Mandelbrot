@@ -9,7 +9,7 @@ Welcome to the Mandelbrot Drawing Tool, a <b>Java Swing</b> application desgined
 - Customizable color rendering
 
 ### Technologies Used
-- Java Programming Language
+- Java Programming Language: Version 8
 - Swing Framework for the Graphical User Interface
 
 ### Motivation
@@ -64,10 +64,23 @@ First time I realized limits of **double** data type while exploring infinities 
 
 ### How to use
 Most of the control button are self explanatory:   
-**Set Iterations** Maximum value of n in $z_{n+1}=z_n^2+c$. Even after applying these many iterations the number doesn't escape to infinity, it is considered to belonging Mandelbrot set and the point is colored BLACK.  
-**z0**: In the very first iteration $n=0$ to generate Mandelbrot set we choose $z_0 = 0$. We can also provide different value, based upon different values, it will generate different images.   
-**Zoom In:** and **Zoom out** in/from the center of image.
-**Up**: Drags the image down to make it its upper region visible. Similarly other buttons works.   
-**Palette Length**: 
+##### Set Iterations:
+Maximum value of n in $z_{n+1}=z_n^2+c$. Even after applying these many iterations the number doesn't escape to infinity, it is considered to belonging Mandelbrot set and the point is colored BLACK.  
+##### z0:
+In the very first iteration $n=0$ to generate Mandelbrot set we choose $z_0 = 0$. We can also provide different value, based upon different values, it will generate different images.   
+##### Zoom In: and Zoom out
+To zoom in/from the center of image.
+##### UP:
+Drags the image down to make it its upper region visible. Similarly other buttons works.   
+##### Palette Length:
+Decrease Palette length to reveal more finer details from the complex plane. 
+Increase the Palette length to get broader picture of the pattern or if the pattern becomes difficult to visualize.    
+##### Reset
+It resets everyting in the tool.
 
+---
 
+<img width="407" alt="image" src="https://github.com/VishalRana2015/Mandelbrot/assets/69715143/53b6c8c4-f842-4afb-80fa-ba50e380f724"> ![image](https://github.com/VishalRana2015/Mandelbrot/assets/69715143/166b0927-ca42-4acc-8fba-71ebab13f7c8)
+
+---
+Thank you for exploring this project! Happy Exploring!
