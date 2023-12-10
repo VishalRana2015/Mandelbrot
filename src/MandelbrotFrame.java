@@ -22,14 +22,18 @@ public class MandelbrotFrame extends JFrame {
     private static JPanel pointPanel;
     private static JSlider paletteSlider;
     private static JTextField paletteValueField;
+
+    private static JSpinner realSpinner, imgSpinner;
+    private static SpinnerNumberModel iterationsSpinnerNumberModel, spinnerNumberModelReal, spinnerNumberModelImg;
     private JSpinner iterationsSpinner;
+
 
     boolean isTriggered;
     private Timer timer;
 
     public MandelbrotFrame(String frameName) throws Exception {
         super(frameName);
-        setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 14)));
+        setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 12)));
         this.setSize(new Dimension(1200, 800));
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
@@ -87,7 +91,7 @@ public class MandelbrotFrame extends JFrame {
         JLabel iterationsLabel = new JLabel("<html>Set Iterations</html>");
         iterationPanel.add(iterationsLabel, cont);
 
-        SpinnerNumberModel iterationsSpinnerNumberModel = new SpinnerNumberModel(mandelbrotComponent.getMaxIterations(), 1, 5000, 1);
+        iterationsSpinnerNumberModel = new SpinnerNumberModel(mandelbrotComponent.getMaxIterations(), 1, 5000, 1);
         iterationsSpinner = new JSpinner(iterationsSpinnerNumberModel);
 
         cont.gridy = 2;
@@ -114,10 +118,10 @@ public class MandelbrotFrame extends JFrame {
         cont.gridwidth = 1;
         cont.anchor = GridBagConstraints.EAST;
         z0Panel.add(new JLabel("Real: "), cont);
-        SpinnerNumberModel spinnerNumberModelReal = new SpinnerNumberModel(mandelbrotComponent.getZ0().getReal(), -4, 4, 0.01);
-        JSpinner realSpinner = new JSpinner(spinnerNumberModelReal);
-        SpinnerNumberModel spinnerNumberModelImg = new SpinnerNumberModel(mandelbrotComponent.getZ0().getImaginary(), -4, 4, 0.01);
-        JSpinner imgSpinner = new JSpinner(spinnerNumberModelImg);
+        spinnerNumberModelReal = new SpinnerNumberModel(mandelbrotComponent.getZ0().getReal(), -4, 4, 0.01);
+        realSpinner = new JSpinner(spinnerNumberModelReal);
+        spinnerNumberModelImg = new SpinnerNumberModel(mandelbrotComponent.getZ0().getImaginary(), -4, 4, 0.01);
+        imgSpinner = new JSpinner(spinnerNumberModelImg);
 
         realSpinner.addChangeListener((ChangeEvent e) -> {
             JSpinner spinner = (JSpinner) e.getSource();
@@ -306,6 +310,10 @@ public class MandelbrotFrame extends JFrame {
         cont.fill = GridBagConstraints.HORIZONTAL;
         cont.gridwidth = 4;
         pointPanel.add(currentPixelEscapeIterationsCountShowPanel, cont);
+
+        pointPanel.setPreferredSize(new Dimension(MENU_MAXIMUM_WIDTH, 75));
+        pointPanel.setMaximumSize(new Dimension(MENU_MAXIMUM_WIDTH, 75));
+        pointPanel.setMinimumSize(new Dimension(MENU_MAXIMUM_WIDTH, 75));
         panel.add(pointPanel);
 
 
@@ -315,6 +323,16 @@ public class MandelbrotFrame extends JFrame {
 
         //---------------------------------------------------------------------------------------------------
 
+        // -- Reset Button -----------------------------------------------------
+        JPanel resetPanel = new JPanel();
+        resetPanel.setLayout(new FlowLayout());
+        resetButton = new JButton("<html>Reset</html");
+        resetPanel.add(resetButton);
+        resetPanel.setMinimumSize(new Dimension(MENU_MAXIMUM_WIDTH, 50));
+        resetPanel.setPreferredSize(new Dimension(MENU_MAXIMUM_WIDTH, 50));
+        resetPanel.setMaximumSize(new Dimension(MENU_MINIMUM_WIDTH, 50));
+        resetPanel.setBackground(Color.PINK);
+        panel.add(resetPanel);
         return panel;
     }
 
@@ -499,6 +517,18 @@ public class MandelbrotFrame extends JFrame {
                 mandelbrotComponent.revalidate();
                 mandelbrotComponent.repaint();
             });
+        });
+
+        resetButton.addActionListener((ActionEvent e) -> {
+            iterationsSpinnerNumberModel.setValue(MandelbrotComponent.INITIAL_ITERATIONS);
+            spinnerNumberModelReal.setValue(0.0);
+            spinnerNumberModelImg.setValue(0.0);
+            mandelbrotComponent.setMandelbrotLeftCornerX(MandelbrotComponent.MANDELBROT_INITIAL_LEFT_CORNER_X);
+            mandelbrotComponent.setMandelbrotLeftCornerY(MandelbrotComponent.MANDELBROT_INITIAL_LEFT_CORNER_Y);
+            mandelbrotComponent.setMandelbrotWidth(MandelbrotComponent.MANDELBROT_INITIAL_WIDTH);
+            mandelbrotComponent.setMandelbrotHeight(MandelbrotComponent.MANDELBROT_INITIAL_HEIGHT);
+            mandelbrotComponent.resetScalingFactor();
+            updateUI();
         });
     }
 

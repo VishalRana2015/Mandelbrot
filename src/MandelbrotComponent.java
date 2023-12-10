@@ -30,10 +30,10 @@ public class MandelbrotComponent extends JComponent {
     private Point currentMandelbrotPoint;
     private Point selectionSquareStartingPoint, selectionSquareEndingPoint;
     private int selectionSquareLength;
-    private static final double MANDELBROT_INITIAL_WIDTH = 4.0;
-    private static final double MANDELBROT_INITIAL_HEIGHT = 4.0;
-    private static final double MANDELBROT_INITIAL_LEFT_CORNER_X = -2.0;
-    private static final double MANDELBROT_INITIAL_LEFT_CORNER_Y = 2.0;
+    public static final double MANDELBROT_INITIAL_WIDTH = 4.0;
+    public static final double MANDELBROT_INITIAL_HEIGHT = 4.0;
+    public static final double MANDELBROT_INITIAL_LEFT_CORNER_X = -2.0;
+    public static final double MANDELBROT_INITIAL_LEFT_CORNER_Y = 2.0;
     private static final double MANDELBROT_INITIAL_CENTER_X = 0.0;
     private static final double MANDELBROT_INITIAL_CENTER_Y = 0.0;
     private static final int FIRST_MANDELBROT_ITERATIONS_TO_STORE = 100;
