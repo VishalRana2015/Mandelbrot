@@ -30,16 +30,17 @@ public class MandelbrotComponent extends JComponent {
     private Point currentMandelbrotPoint;
     private Point selectionSquareStartingPoint, selectionSquareEndingPoint;
     private int selectionSquareLength;
-    private static final double MANDELBROT_INITIAL_WIDTH = 4.0;
-    private static final double MANDELBROT_INITIAL_HEIGHT = 4.0;
-    private static final double MANDELBROT_INITIAL_LEFT_CORNER_X = -2.0;
-    private static final double MANDELBROT_INITIAL_LEFT_CORNER_Y = 2.0;
+    public static final double MANDELBROT_INITIAL_WIDTH = 4.0;
+    public static final double MANDELBROT_INITIAL_HEIGHT = 4.0;
+    public static final double MANDELBROT_INITIAL_LEFT_CORNER_X = -2.0;
+    public static final double MANDELBROT_INITIAL_LEFT_CORNER_Y = 2.0;
     private static final double MANDELBROT_INITIAL_CENTER_X = 0.0;
     private static final double MANDELBROT_INITIAL_CENTER_Y = 0.0;
     private static final int FIRST_MANDELBROT_ITERATIONS_TO_STORE = 100;
+    private int[] iterationsCountArray;
 
     private static final Color LINE_COLOR = Color.white;
-    private static final int LINE_THICKNESS = 1;
+    private static final int LINE_THICKNESS = 2;
 
     public void setSelectMode(boolean selectMode) {
         this.selectMode = selectMode;
@@ -80,13 +81,22 @@ public class MandelbrotComponent extends JComponent {
         this.setListeners();
         this.maxIterations = INITIAL_ITERATIONS;
         this.setZ0(new ComplexNumber(0, 0));
-        this.mandelbrotColor = new MandelbrotColor(colorArray);
+        this.mandelbrotColor = new MandelbrotColor(this, colorArray);
     }
 
 
     public void createImage() {
+        setColor();
         MemoryImageSource mis = new MemoryImageSource(pixelWidth, pixelHeight, pixels, 0, pixelWidth);
         this.mandelbrotImage = createImage(mis);
+    }
+
+    public void setColor() {
+        for (int pixelY = 0; pixelY < pixelHeight; pixelY++) {
+            for (int pixelX = 0; pixelX < pixelWidth; pixelX++) {
+                pixels[pixelY * pixelWidth + pixelX] = mandelbrotColor.getColor(iterationsCountArray[pixelY * pixelWidth + pixelX]).getRGB();
+            }
+        }
     }
 
     public void setScalingFactor(double scalingFactor) {
@@ -141,8 +151,28 @@ public class MandelbrotComponent extends JComponent {
         this.scalingFactor = mandelbrotWidth / scalingFactorDivider;
     }
 
+    // returns pixel coordinates from the given coordinates.
+    /* The given coordinate is co-ordinate from the mandelbrot component, and returned coordinate is from the pixels array.
+        Mandelbrot component can be in its full size or not,
+        If the mandelbrot component is in its full size, then a pixel coordinates values in the mandelbrot component as well as in the image is same,
+        However, if the mandelbrot component is smaller than its full size, in that case a coordinates value in mandelbrot component will not be pointing to the pixel with same coordinate value, as the
+        image created by pixels get resized proportionally to get fit in the available space.
+
+        That is where we need to have exact value of pixel coordinate from a Point in mandelbrot frame
+     */
+    public Point getPixelCoordinatesAt(Point point) {
+        if ( point == null){
+            return null;
+        }
+        Dimension dimension = this.getSize();
+        double x = (pixelWidth / dimension.getWidth()) * point.getX();
+        double y = (pixelHeight / dimension.getHeight()) * point.getY();
+        Point pixelPoint = new Point((int) x, (int) y);
+        return pixelPoint;
+    }
+
     public void setSelectionSquareStartingPoint(Point selectionSquareStartingPoint) {
-        this.selectionSquareStartingPoint = selectionSquareStartingPoint;
+        this.selectionSquareStartingPoint = getPixelCoordinatesAt(selectionSquareStartingPoint);
     }
 
     public Point getSelectionSquareStartingPoint() {
@@ -150,7 +180,7 @@ public class MandelbrotComponent extends JComponent {
     }
 
     public void setSelectionSquareEndingPoint(Point selectionSquareEndingPoint) {
-        this.selectionSquareEndingPoint = selectionSquareEndingPoint;
+        this.selectionSquareEndingPoint = getPixelCoordinatesAt(selectionSquareEndingPoint);
     }
 
     public Point getSelectionSquareEndingPoint() {
@@ -210,6 +240,7 @@ public class MandelbrotComponent extends JComponent {
         this.setMinimumSize(new Dimension(pixelWidth, pixelHeight));
         // Creating a mandelbrot image
         pixels = new int[pixelWidth * pixelHeight];
+        iterationsCountArray = new int[pixelWidth * pixelHeight];
 
     }
 
@@ -291,7 +322,7 @@ public class MandelbrotComponent extends JComponent {
     }
 
     public int getIterationsFor(Point p) {
-        return 100;
+        return iterationsCountArray[(int) p.getX() + (int) p.getY() * pixelWidth];
     }
 
     public ArrayList<Point> getPoints(ArrayList<ComplexNumber> list) {
@@ -327,7 +358,7 @@ public class MandelbrotComponent extends JComponent {
     }
 
     public Color[] colorArray = {
-            new Color(255, 255, 200),
+            //  new Color(255, 255, 200), // this color was adding nuisance
             new Color(0, 0, 120),
             new Color(0, 0, 255),
             new Color(0, 120, 120),
@@ -439,22 +470,11 @@ public class MandelbrotComponent extends JComponent {
                 ArrayList<ComplexNumber> list = mandelbrotComponent.calculateMandelbrotIterations(new ComplexNumber(x, y), mandelbrotComponent.getMaxIterations());
                 ComplexNumber zn = list.get(list.size() - 1);
                 int iterationsTookToEscape = list.size();
-                try {
-                    Color color = null;
-                    //Color.getHSBColor(((float) iterationsTookToEscape) / this.maxIterations, 1.0f, 1.0f);
-                    if (iterationsTookToEscape >= mandelbrotComponent.getMaxIterations()) {
-                        color = Color.BLACK;
-                    } else {
-                        color = mandelbrotComponent.getMandelbrotColor().getColor(iterationsTookToEscape);
-                    }
-                    pixels[pixelY * mandelbrotComponent.getPixelWidth() + pixelX] = color.getRGB();
-                } catch (Exception exp) {
-                    System.out.println("iterations : " + iterationsTookToEscape);
-                    System.out.println("iterationColorRatio : " + iterationColorRatio);
-                    System.out.println("colorArray.length: " + mandelbrotComponent.colorArray.length);
-                    exp.printStackTrace();
-                    throw new RuntimeException("Exception: " + exp.getMessage());
-                }
+
+                Color color = null;
+                //Color.getHSBColor(((float) iterationsTookToEscape) / this.maxIterations, 1.0f, 1.0f);
+                mandelbrotComponent.iterationsCountArray[pixelY * mandelbrotComponent.getPixelWidth() + pixelX] = iterationsTookToEscape;
+                //pixels[pixelY * mandelbrotComponent.getPixelWidth() + pixelX] = color.getRGB();
             }
         }
     }

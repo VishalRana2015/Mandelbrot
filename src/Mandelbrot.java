@@ -3,7 +3,6 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Mandelbrot {
-
     public static void main(String[] args) {
         UIManager.getLookAndFeelDefaults()
                 .put("defaultFont", new Font("Arial", Font.BOLD, 22));

@@ -17,19 +17,23 @@ public class MandelbrotFrame extends JFrame {
     public static int MENU_MAXIMUM_WIDTH = 500;
     public static int MENU_MINIMUM_WIDTH = 300;
     public static int VERTICAL_STRUCT_HEIGHT = 5;
-    private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton;
-    private static JLabel xValueLabel, yValueLabel, iterationsCountLabel;
+    private JButton zoomInButton, zoomOutButton, upButton, downButton, leftButton, rightButton, resetButton;
+    private static JLabel xValueLabel, yValueLabel, currentPixelIterationCountLabel;
     private static JPanel pointPanel;
     private static JSlider paletteSlider;
     private static JTextField paletteValueField;
+
+    private static JSpinner realSpinner, imgSpinner;
+    private static SpinnerNumberModel iterationsSpinnerNumberModel, spinnerNumberModelReal, spinnerNumberModelImg;
     private JSpinner iterationsSpinner;
+
 
     boolean isTriggered;
     private Timer timer;
 
     public MandelbrotFrame(String frameName) throws Exception {
         super(frameName);
-        setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 18)));
+        setFont(new FontUIResource(new Font("Cabin", Font.PLAIN, 12)));
         this.setSize(new Dimension(1200, 800));
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
@@ -87,18 +91,19 @@ public class MandelbrotFrame extends JFrame {
         JLabel iterationsLabel = new JLabel("<html>Set Iterations</html>");
         iterationPanel.add(iterationsLabel, cont);
 
-        SpinnerNumberModel iterationsSpinnerNumberModel = new SpinnerNumberModel(mandelbrotComponent.getMaxIterations(), 1, 5000, 1);
+        iterationsSpinnerNumberModel = new SpinnerNumberModel(mandelbrotComponent.getMaxIterations(), 1, 5000, 1);
         iterationsSpinner = new JSpinner(iterationsSpinnerNumberModel);
 
         cont.gridy = 2;
         iterationPanel.add(iterationsSpinner, cont);
+        iterationPanel.setMinimumSize(new Dimension(MENU_MINIMUM_WIDTH, 50));
+        iterationPanel.setPreferredSize(new Dimension(MENU_MINIMUM_WIDTH, 50));
         iterationPanel.setMaximumSize(iterationPanel.getPreferredSize());
         panel.add(iterationPanel);
 
         // ------------------------------------------------------------z0 Panel-----------------------------------------------------------------------------------------------------------------------------
-        JSeparator separator1 = new JSeparator(JSeparator.HORIZONTAL);
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        panel.add(separator1);
+        panel.add(createSeparator());
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         JPanel z0Panel = new JPanel();
@@ -112,10 +117,10 @@ public class MandelbrotFrame extends JFrame {
         cont.gridwidth = 1;
         cont.anchor = GridBagConstraints.EAST;
         z0Panel.add(new JLabel("Real: "), cont);
-        SpinnerNumberModel spinnerNumberModelReal = new SpinnerNumberModel(mandelbrotComponent.getZ0().getReal(), -4, 4, 0.01);
-        JSpinner realSpinner = new JSpinner(spinnerNumberModelReal);
-        SpinnerNumberModel spinnerNumberModelImg = new SpinnerNumberModel(mandelbrotComponent.getZ0().getImaginary(), -4, 4, 0.01);
-        JSpinner imgSpinner = new JSpinner(spinnerNumberModelImg);
+        spinnerNumberModelReal = new SpinnerNumberModel(mandelbrotComponent.getZ0().getReal(), -4, 4, 0.01);
+        realSpinner = new JSpinner(spinnerNumberModelReal);
+        spinnerNumberModelImg = new SpinnerNumberModel(mandelbrotComponent.getZ0().getImaginary(), -4, 4, 0.01);
+        imgSpinner = new JSpinner(spinnerNumberModelImg);
 
         realSpinner.addChangeListener((ChangeEvent e) -> {
             JSpinner spinner = (JSpinner) e.getSource();
@@ -150,8 +155,7 @@ public class MandelbrotFrame extends JFrame {
 
         //------------------------------------Zoom Panel added -------------------------------------------------------------------------------------------------------------------
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        JSeparator separator2 = new JSeparator(JSeparator.HORIZONTAL);
-        panel.add(separator2);
+        panel.add(createSeparator());
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         JPanel zoomPanel = new JPanel();
@@ -178,8 +182,7 @@ public class MandelbrotFrame extends JFrame {
         panel.add(zoomPanel);
 
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        JSeparator separator3 = new JSeparator();
-        panel.add(separator3);
+        panel.add(createSeparator());
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         // --------------------------------------------Move Left, Right, Up and Down-------------------------------------------------------------------------------------------------------
@@ -220,8 +223,7 @@ public class MandelbrotFrame extends JFrame {
         movePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         panel.add(movePanel);
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        JSeparator separator4 = new JSeparator();
-        panel.add(separator4);
+        panel.add(createSeparator());
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         //--------------------------- Palette Length -------------------------------------------------------------------------------------------//
@@ -250,52 +252,84 @@ public class MandelbrotFrame extends JFrame {
         //----------------------------------------------------------------------------------------------------------------------
         pointPanel = new JPanel();
         pointPanel.setLayout(new GridBagLayout());
+        cont = new GridBagConstraints();
+        xValueLabel = new JLabel("xValue");
+        yValueLabel = new JLabel("yValue");
+        currentPixelIterationCountLabel = new JLabel("count");
+
+        //printing x-value in the first row
         cont.gridx = 0;
         cont.gridy = 0;
+        cont.weighty = 1;
+        cont.weightx = 1;
+        cont.anchor = GridBagConstraints.EAST;
         cont.gridwidth = 1;
         cont.gridheight = 1;
-        cont.weightx = 1;
-        cont.weighty = 1;
-        cont.anchor = GridBagConstraints.EAST;
-        pointPanel.add(new JLabel("<html>x:&nbsp&nbsp</html>"), cont);
-        xValueLabel = new JLabel("xValue");
+        pointPanel.add(new JLabel("<html>x:&nbsp</html>"), cont);
+
+        cont.gridwidth = 3;
         cont.gridx = 1;
         cont.anchor = GridBagConstraints.WEST;
         pointPanel.add(xValueLabel, cont);
-        cont.gridx = 2;
+
+        // printing y value in the second row
+        cont.gridx = 0;
+        cont.gridy = 1;
+        cont.gridwidth = 1;
         cont.anchor = GridBagConstraints.EAST;
-        pointPanel.add(new JLabel("<html>y:&nbsp&nbsp</html>"), cont);
-        yValueLabel = new JLabel("yValue");
-        cont.gridx = 3;
+        pointPanel.add(new JLabel("<html>y:&nbsp</html>"), cont);
+
+        cont.gridx = 1;
+        cont.gridwidth = 3;
         cont.anchor = GridBagConstraints.WEST;
         pointPanel.add(yValueLabel, cont);
 
-        JLabel iterationsCountTextLabel = new JLabel("<html>Iterations took to escape:</html>");
-        cont.gridwidth = 3; // I want it this to be 2 column wide component, this make
-        cont.fill = GridBagConstraints.HORIZONTAL;
-        cont.gridy = 2;
+        //-- printing iteration in the third row
+        JPanel currentPixelEscapeIterationsCountShowPanel = new JPanel();
+        currentPixelEscapeIterationsCountShowPanel.setLayout(new GridBagLayout());
+        JLabel iterationTextLabel = new JLabel("<html>Iterations took to escape:&nbsp</html>");
         cont.gridx = 0;
-        cont.anchor = GridBagConstraints.EAST;
-        pointPanel.add(iterationsCountTextLabel, cont);
+        cont.gridy = 0;
+        cont.weightx = 3;
+        cont.gridwidth = 1;
+        cont.anchor = GridBagConstraints.CENTER;
+        currentPixelEscapeIterationsCountShowPanel.add(iterationTextLabel, cont);
 
-        cont.gridx = 3; // align the component starting from the second column in the grid
-        cont.gridwidth = 2; // this component should also be two column wide
-        // Since the weight of all the components in the second row is same, therefore each column has equal area
-        cont.anchor = GridBagConstraints.EAST;
-        cont.ipadx = 10;
-        iterationsCountLabel = new JLabel("count");
-        pointPanel.add(iterationsCountLabel, cont);
+        currentPixelIterationCountLabel = new JLabel("<html></html>");
+        cont.gridx = 1;
+        cont.gridy = 0;
+        cont.weightx = 1;
+        cont.gridwidth = 1;
+        cont.anchor = GridBagConstraints.WEST;
+        currentPixelEscapeIterationsCountShowPanel.add(currentPixelIterationCountLabel, cont);
 
-        panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        panel.add(new JSeparator(JSeparator.HORIZONTAL));
-        panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        pointPanel.setVisible(false);
+        cont.gridx = 0;
+        cont.gridy = 2;
+        cont.fill = GridBagConstraints.HORIZONTAL;
+        cont.gridwidth = 4;
+        pointPanel.add(currentPixelEscapeIterationsCountShowPanel, cont);
+
+        pointPanel.setPreferredSize(new Dimension(MENU_MAXIMUM_WIDTH, 75));
+        pointPanel.setMaximumSize(new Dimension(MENU_MAXIMUM_WIDTH, 75));
+        pointPanel.setMinimumSize(new Dimension(MENU_MAXIMUM_WIDTH, 75));
         panel.add(pointPanel);
 
 
-        //---------------------------------------------------------------------------------------------------
-        pointPanel.add(Box.createVerticalGlue());
+        panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
+        panel.add(createSeparator());
+        panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
+        //---------------------------------------------------------------------------------------------------
+
+        // -- Reset Button -----------------------------------------------------
+        JPanel resetPanel = new JPanel();
+        resetPanel.setLayout(new FlowLayout());
+        resetButton = new JButton("<html>Reset</html");
+        resetPanel.add(resetButton);
+        resetPanel.setMinimumSize(new Dimension(MENU_MAXIMUM_WIDTH, 50));
+        resetPanel.setPreferredSize(new Dimension(MENU_MAXIMUM_WIDTH, 50));
+        resetPanel.setMaximumSize(new Dimension(MENU_MINIMUM_WIDTH, 50));
+        panel.add(resetPanel);
         return panel;
     }
 
@@ -366,13 +400,13 @@ public class MandelbrotFrame extends JFrame {
                 Dimension dimension = mandelbrotComponent.getSize();
                 Double x = (mandelbrotComponent.getMandelbrotWidth() * p.getX()) / dimension.getWidth() + mandelbrotComponent.getMandelbrotLeftCornerX();
                 Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - (mandelbrotComponent.getMandelbrotHeight() * p.getY()) / dimension.getHeight();
-                xValueLabel.setText(String.format("%.6f", x));
-                yValueLabel.setText(String.format("%.6f", y));
+                xValueLabel.setText(String.format("%.20f", x));
+                yValueLabel.setText(String.format("%.20f", y));
                 // convert these points in pixel coordinates or image coordinates
                 double pixelX = (mandelbrotComponent.getPixelWidth() / mandelbrotComponent.getMandelbrotWidth()) * (x - mandelbrotComponent.getMandelbrotLeftCornerX());
                 double pixelY = (mandelbrotComponent.getPixelHeight() / mandelbrotComponent.getMandelbrotHeight()) * (mandelbrotComponent.getMandelbrotLeftCornerY() - y);
                 Point pixelPoint = new Point((int) pixelX, (int) pixelY);
-                iterationsCountLabel.setText(String.valueOf(mandelbrotComponent.getIterationsFor(pixelPoint)));
+                currentPixelIterationCountLabel.setText(String.valueOf(mandelbrotComponent.getIterationsFor(pixelPoint)));
                 pointPanel.setVisible(true);
                 mandelbrotComponent.setCurrentMandelbrotPoint(e.getPoint());
                 try {
@@ -416,8 +450,8 @@ public class MandelbrotFrame extends JFrame {
 
                 // convert the topLeftCorner point, in real coordinates.
                 Dimension dimension = mandelbrotComponent.getSize();
-                Double x = mandelbrotComponent.getMandelbrotWidth() * ((double) topLeftCorner.getX() / dimension.getWidth()) + mandelbrotComponent.getMandelbrotLeftCornerX();
-                Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - mandelbrotComponent.getMandelbrotHeight() * ((double) topLeftCorner.getY() / dimension.getHeight());
+                Double x = mandelbrotComponent.getMandelbrotWidth() * ((double) topLeftCorner.getX() / mandelbrotComponent.getPixelWidth()) + mandelbrotComponent.getMandelbrotLeftCornerX();
+                Double y = mandelbrotComponent.getMandelbrotLeftCornerY() - mandelbrotComponent.getMandelbrotHeight() * ((double) topLeftCorner.getY() / mandelbrotComponent.getPixelHeight());
                 mandelbrotComponent.setMandelbrotLeftCornerX(x);
                 mandelbrotComponent.setMandelbrotLeftCornerY(y);
 
@@ -475,6 +509,22 @@ public class MandelbrotFrame extends JFrame {
             int value = slider.getValue();
             paletteValueField.setText(String.valueOf(value));
             mandelbrotComponent.getMandelbrotColor().setPaletteLength(value);
+            SwingUtilities.invokeLater(() -> {
+                mandelbrotComponent.createImage();
+                mandelbrotComponent.revalidate();
+                mandelbrotComponent.repaint();
+            });
+        });
+
+        resetButton.addActionListener((ActionEvent e) -> {
+            iterationsSpinnerNumberModel.setValue(MandelbrotComponent.INITIAL_ITERATIONS);
+            spinnerNumberModelReal.setValue(0.0);
+            spinnerNumberModelImg.setValue(0.0);
+            mandelbrotComponent.setMandelbrotLeftCornerX(MandelbrotComponent.MANDELBROT_INITIAL_LEFT_CORNER_X);
+            mandelbrotComponent.setMandelbrotLeftCornerY(MandelbrotComponent.MANDELBROT_INITIAL_LEFT_CORNER_Y);
+            mandelbrotComponent.setMandelbrotWidth(MandelbrotComponent.MANDELBROT_INITIAL_WIDTH);
+            mandelbrotComponent.setMandelbrotHeight(MandelbrotComponent.MANDELBROT_INITIAL_HEIGHT);
+            mandelbrotComponent.resetScalingFactor();
             updateUI();
         });
     }

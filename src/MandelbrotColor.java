@@ -6,7 +6,7 @@ public class MandelbrotColor {
     private int paletteLength;
     private MandelbrotComponent mandelbrotComponent;
     private Color[] colorArray;
-    MandelbrotColor(Color[] colorArray) throws Exception{
+    MandelbrotColor(MandelbrotComponent mandelbrotComponent, Color[] colorArray) throws Exception{
         if (colorArray == null || colorArray.length < 1){
             throw new RuntimeException("There should be at least one color in the colorArray");
         }
@@ -23,6 +23,9 @@ public class MandelbrotColor {
         return paletteLength;
     }
     public Color getColor(int iterations){
+        if ( iterations >= mandelbrotComponent.getMaxIterations()){
+            return Color.BLACK;
+        }
         double colorLength = (double)paletteLength/colorArray.length;
         iterations = iterations%paletteLength;
         int index = (int)(iterations/colorLength);

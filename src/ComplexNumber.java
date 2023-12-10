@@ -39,4 +39,16 @@ public class ComplexNumber {
         imaginary = a.getImaginary() + b.getImaginary();
         return new ComplexNumber(real, imaginary);
     }
+
+    @Override
+    public String toString() {
+        String s = this.re + "";
+        if ( this.img < 0){
+            s += "-" + "i" + Math.abs(this.img);
+        }
+        else{
+            s += "+i" + this.img;
+        }
+        return s;
+    }
 }
