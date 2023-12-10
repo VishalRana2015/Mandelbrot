@@ -99,9 +99,8 @@ public class MandelbrotFrame extends JFrame {
         panel.add(iterationPanel);
 
         // ------------------------------------------------------------z0 Panel-----------------------------------------------------------------------------------------------------------------------------
-        JSeparator separator1 = new JSeparator(JSeparator.HORIZONTAL);
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        panel.add(separator1);
+        panel.add(createSeparator());
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         JPanel z0Panel = new JPanel();
@@ -153,8 +152,7 @@ public class MandelbrotFrame extends JFrame {
 
         //------------------------------------Zoom Panel added -------------------------------------------------------------------------------------------------------------------
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        JSeparator separator2 = new JSeparator(JSeparator.HORIZONTAL);
-        panel.add(separator2);
+        panel.add(createSeparator());
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         JPanel zoomPanel = new JPanel();
@@ -178,11 +176,11 @@ public class MandelbrotFrame extends JFrame {
 
         zoomPanel.setMinimumSize(new Dimension(MENU_MAXIMUM_WIDTH, (int) zoomPanel.getPreferredSize().getHeight()));
         zoomPanel.setMaximumSize(new Dimension(MENU_MAXIMUM_WIDTH, (int) zoomPanel.getPreferredSize().getHeight()));
+        zoomPanel.setBackground(Color.PINK);
         panel.add(zoomPanel);
 
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        JSeparator separator3 = new JSeparator();
-        panel.add(separator3);
+        panel.add(createSeparator());
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         // --------------------------------------------Move Left, Right, Up and Down-------------------------------------------------------------------------------------------------------
@@ -223,8 +221,7 @@ public class MandelbrotFrame extends JFrame {
         movePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         panel.add(movePanel);
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        JSeparator separator4 = new JSeparator();
-        panel.add(separator4);
+        panel.add(createSeparator());
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         //--------------------------- Palette Length -------------------------------------------------------------------------------------------//
@@ -278,7 +275,7 @@ public class MandelbrotFrame extends JFrame {
         cont.gridy = 1;
         cont.gridwidth = 1;
         cont.anchor = GridBagConstraints.EAST;
-        pointPanel.add(new JLabel("<html>y:&nbsp</html>"),cont);
+        pointPanel.add(new JLabel("<html>y:&nbsp</html>"), cont);
 
         cont.gridx = 1;
         cont.gridwidth = 3;
@@ -313,7 +310,7 @@ public class MandelbrotFrame extends JFrame {
 
 
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
-        panel.add(new JSeparator(JSeparator.HORIZONTAL));
+        panel.add(createSeparator());
         panel.add(Box.createVerticalStrut(VERTICAL_STRUCT_HEIGHT));
 
         //---------------------------------------------------------------------------------------------------
