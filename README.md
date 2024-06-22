@@ -35,20 +35,27 @@ The real beauty of the Mandelbrot set lies in its visualization. Each point in t
 The above image is taken from Mandelbrot set created by this tool. The tool has assinged color to all the numbers in this grid based upon the number of iterations they took to escape.   
 ##### But how can we test whether a number escapes to infinity or not?
 We can use the fact that, if at any point in time the magnitude of $|z_n|$ becomes greater than 2, then the Complex Number always escapes to infinity. There are mathematical proofs about this.  
-In the above image, some of the numbers didn't escape to infinity even so they got color **BLACk**.  
+In the above image, some of the numbers didn't escape to infinity even so they got color **BLACK**.  
 The number of iterations each point in this grid is taking to get its magnitude bigger than 2 can be visualized through colors.  
 
 
 Iteration count is in decreasing order for these colors  
 **BLACK** The points belongs to mandelbrot set, as they haven't escaped to infinity.
+<br/>Imagine you have kept Palette count to 500, then 
 **DARK RED** - Took more than 320 iterations to escape   
 **RED** - Took More than 275 but lesser than 320   
 **DARK BROWN** -   
-**LIGHT BROWN**   
-**LIGHT GREEN**   
+**LIGHT BROWN** -
+**LIGHT GREEN** -
 
-I hope by now, you can see through how we are coloring different point on the complex plane. 
-
+I hope by now, you can see through how we are coloring different points on the complex plane. 
+<br/> <br/>
+The acutal method of coloring the point is as follows. <br/>
+Imagine palette count is set to $p$ and I have total $n$ number of different colors in an array. <br/> 
+If the point takes x iterations to escape to infinity where $x$ < $maxIterations$ ( if even after evaluating the point for $maxIterations$ times, the point doesn't escape to infinity we always assign BLACK color to the point)
+the color of the point would be the color at the following index in the array
+**(x mod p) mod n**
+<br/>
 ### Infinite Intricacy:
 This visualization through colors reveal infinity intricacy of self-similarity and complexity at varying levels of magnification. As you zoom into different regions of the Mandelbrot set, you continue to discover intricate patterns and strucutres. This property is a hallmark of fractals.   
 ##### Self Similarity: 
